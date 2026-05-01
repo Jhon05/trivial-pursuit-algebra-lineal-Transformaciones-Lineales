@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trivial Pursuit Deluxe · Álgebra Lineal</title>
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(','\\)'], ['$', '$']], displayMath: [['\\[','\\]']], processEscapes: true },
+      svg: { fontCache: 'global', scale: 1.05 }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <style>
+    :root{
+      --bg0:#050816; --bg1:#07142f; --bg2:#0d2351;
+      --gold:#ffd166; --gold2:#f4a261; --white:#f7fbff; --ink:#061022;
+      --glass:rgba(8,16,38,.78); --line:rgba(255,255,255,.16);
+      --good:#24d98f; --bad:#ff5e78; --warn:#ffd166;
+      --lineal:#00d4ff; --nucleo:#ff4fd8; --imagen:#3cff9d; --matriz:#ffd447; --espacios:#a77dff; --integrador:#ff7b54;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; overflow:hidden; color:white; font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;
+      background:
+        radial-gradient(circle at 12% 10%, rgba(0,212,255,.20), transparent 24%),
+        radial-gradient(circle at 92% 12%, rgba(255,79,216,.16), transparent 24%),
+        radial-gradient(circle at 50% 105%, rgba(255,209,102,.15), transparent 30%),
+        linear-gradient(180deg,var(--bg0),var(--bg1) 52%,#030611);
+    }
+    body::after{content:"";position:fixed;inset:0;pointer-events:none;background-image:radial-gradient(rgba(255,255,255,.07) 1px,transparent 1px);background-size:18px 18px;opacity:.23}
+    button,input,select{font:inherit}
+    body.security-armed{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+    input,textarea{user-select:text;-webkit-user-select:text}
+    button{border:0;border-radius:16px;padding:12px 16px;font-weight:900;cursor:pointer;box-shadow:0 10px 26px rgba(0,0,0,.30);transition:.16s transform,.16s filter,.16s opacity}
+    button:hover{transform:translateY(-1px);filter:brightness(1.07)}
+    button:disabled{opacity:.45;cursor:not-allowed;transform:none;filter:none}
+    .primary{background:linear-gradient(135deg,#fff1a8,#ffb703);color:#251400}
+    .secondary{background:linear-gradient(135deg,#cfffff,#00d4ff);color:#05203e}
+    .danger{background:linear-gradient(135deg,#ffadc0,#e63956);color:#fff}
+    .success{background:linear-gradient(135deg,#c8ffde,#21c77d);color:#082f1e}
+    .ghost{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:#fff}
+    .mini{padding:8px 11px;border-radius:12px;font-size:13px}
+    .hidden{display:none!important}
+    .screen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:22px;z-index:20}
+    .panel{width:min(980px,96vw);max-height:92vh;overflow:auto;border-radius:32px;padding:26px;background:linear-gradient(180deg,rgba(13,35,81,.96),rgba(5,9,24,.98));border:1px solid rgba(255,255,255,.16);box-shadow:0 30px 100px rgba(0,0,0,.58), inset 0 1px 0 rgba(255,255,255,.10);backdrop-filter:blur(14px)}
+    .hero{display:grid;grid-template-columns:1.1fr .9fr;gap:24px;align-items:center}
+    .tag{display:inline-block;padding:7px 12px;border-radius:999px;background:rgba(255,209,102,.13);border:1px solid rgba(255,209,102,.35);color:#ffe9a8;font-weight:900;font-size:13px;margin-bottom:12px}
+    h1{font-size:clamp(30px,4vw,54px);line-height:1.02;margin:0 0 10px;color:#ffe9a8;letter-spacing:.4px}
+    .sub{color:#dceaff;line-height:1.5;margin:0}
+    .card{background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.10);border-radius:24px;padding:18px}
+    .field label{display:block;color:#ffe9a8;font-weight:900;font-size:14px;margin-bottom:8px}
+    .field input,.field select{width:100%;padding:13px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.09);color:white;outline:none}
+    .field select option{color:#111}
+    .note{font-size:13px;line-height:1.45;color:#cfe0ff}
+    .lockArt{min-height:420px;border-radius:28px;position:relative;overflow:hidden;padding:30px;background:radial-gradient(circle at 28% 25%,rgba(255,209,102,.35),transparent 23%),linear-gradient(135deg,#102e66,#0d5f87 46%,#1a0f4d);border:1px solid rgba(255,255,255,.14)}
+    .lockArt .megaBoard{position:absolute;right:-60px;bottom:-60px;width:360px;height:360px;border-radius:50%;background:conic-gradient(var(--lineal),var(--nucleo),var(--imagen),var(--matriz),var(--espacios),var(--integrador),var(--lineal));box-shadow:0 0 0 18px rgba(255,255,255,.10),0 30px 70px rgba(0,0,0,.35)}
+    .lockArt .megaBoard::after{content:"ALGEBRA\A LINEAL";white-space:pre;position:absolute;inset:31%;border-radius:50%;background:#061a42;display:grid;place-items:center;text-align:center;font-weight:1000;color:#ffe9a8;border:8px solid rgba(255,255,255,.70)}
+    #setupScreen .panel{width:min(1100px,97vw)}
+    .twoCols{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+    .playerRow{display:grid;grid-template-columns:1.2fr 1fr;gap:10px;margin:10px 0;padding:12px;border-radius:18px;background:rgba(255,255,255,.05)}
+    .topicGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+    .topic{padding:12px;border-radius:16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10)}
+    .footerActions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:16px}
+
+    #app{position:fixed;inset:0;display:grid;grid-template-columns:minmax(820px,1fr) 410px;gap:14px;padding:14px;z-index:4}
+    #sceneWrap{position:relative;min-width:0;display:flex;align-items:center;justify-content:center;perspective:1600px;overflow:hidden;border-radius:30px;border:1px solid rgba(255,255,255,.08);background:radial-gradient(circle at 50% 20%,rgba(255,209,102,.08),transparent 28%),rgba(255,255,255,.025)}
+    #boardArea{position:relative;width:940px;height:940px;flex:0 0 auto;transform-style:preserve-3d;transition:transform .65s ease;z-index:2}
+    #boardArea.view-front{transform:rotateX(0deg) rotateZ(0deg) scale(.92)}
+    #boardArea.view-3d{transform:rotateX(56deg) rotateZ(-18deg) scale(.98)}
+    #boardArea.view-orbit{animation:orbit 15s linear infinite;transform:rotateX(56deg) rotateZ(0deg) scale(.98)}
+    @keyframes orbit{from{transform:rotateX(56deg) rotateZ(0deg) scale(.98)}to{transform:rotateX(56deg) rotateZ(360deg) scale(.98)}}
+    .boardShadow{position:absolute;left:90px;top:86px;width:760px;height:760px;border-radius:50%;background:radial-gradient(circle,rgba(0,0,0,.48),transparent 65%);filter:blur(26px);transform:translateZ(-60px) translateY(55px)}
+    #boardBase{position:absolute;inset:28px;border-radius:46px;background:linear-gradient(135deg,#061a42,#0a2f6f 45%,#051331);border:12px solid #d69b28;box-shadow:0 34px 90px rgba(0,0,0,.55), inset 0 0 0 3px #ffe08a, inset 0 0 0 14px rgba(255,255,255,.045);transform:translateZ(-22px)}
+    #boardCircle{position:absolute;left:98px;top:98px;width:744px;height:744px;border-radius:50%;background:radial-gradient(circle,#133c85 0 22%,#0d2d68 22% 50%,#081e49 50%);border:12px solid rgba(255,225,144,.95);box-shadow:inset 0 0 0 10px rgba(255,255,255,.035),0 18px 48px rgba(0,0,0,.35);transform:translateZ(-8px)}
+    #boardCircle::before{content:"";position:absolute;inset:122px;border-radius:50%;border:10px solid rgba(255,255,255,.12)}
+    #boardCircle::after{content:"";position:absolute;inset:238px;border-radius:50%;border:8px dashed rgba(255,255,255,.16)}
+    #connectors,#boardElements,#tokenLayer{position:absolute;inset:0;transform-style:preserve-3d}
+    .connector{position:absolute;left:470px;top:470px;height:14px;transform-origin:0 50%;border-radius:999px;background:linear-gradient(90deg,rgba(255,255,255,.38),rgba(255,255,255,.07));box-shadow:0 2px 7px rgba(0,0,0,.25);transform-style:preserve-3d;z-index:1}
+    .tile{position:absolute;width:86px;height:70px;border-radius:24px;display:grid;place-items:center;text-align:center;color:#041129;font-weight:1000;border:3px solid rgba(255,255,255,.72);box-shadow:0 18px 0 rgba(0,0,0,.18),0 21px 28px rgba(0,0,0,.32),inset 0 3px 0 rgba(255,255,255,.60),inset 0 -8px 18px rgba(0,0,0,.18);transform:translate(-50%,-50%) translateZ(36px);transform-style:preserve-3d;z-index:4;transition:filter .18s, box-shadow .18s, transform .18s}
+    .tile::before{content:"";position:absolute;left:7px;right:7px;bottom:-12px;height:16px;border-radius:0 0 18px 18px;background:rgba(0,0,0,.22);filter:blur(.2px);z-index:-1}
+    .tile::after{content:"";position:absolute;inset:6px;border-radius:18px;border:1px dashed rgba(0,0,0,.20);pointer-events:none}
+    .tile:hover{filter:brightness(1.08);transform:translate(-50%,-50%) translateZ(48px) scale(1.04)}
+    .tile .num{position:absolute;left:8px;top:5px;font-size:12px;opacity:.82;background:rgba(255,255,255,.45);padding:1px 5px;border-radius:999px}
+    .tile .icon{font-size:22px;line-height:1;margin-top:4px;text-shadow:0 1px rgba(255,255,255,.4)}
+    .tile .caption{position:absolute;bottom:7px;left:5px;right:5px;font-size:9px;letter-spacing:.2px;text-transform:uppercase;line-height:1.05;color:rgba(4,17,41,.90)}
+    .tile.cheese{width:94px;height:76px;border-width:4px;box-shadow:0 0 0 6px rgba(255,255,255,.15),0 0 30px rgba(255,230,160,.55),0 20px 0 rgba(0,0,0,.20),0 25px 36px rgba(0,0,0,.38),inset 0 3px 0 rgba(255,255,255,.72),inset 0 -10px 18px rgba(0,0,0,.20)}
+    .tile.possible{outline:5px solid rgba(255,255,255,.95);box-shadow:0 0 0 8px rgba(255,209,102,.22),0 0 38px rgba(255,209,102,.92),0 22px 0 rgba(0,0,0,.20),0 30px 40px rgba(0,0,0,.42),inset 0 3px 0 rgba(255,255,255,.72);animation:pulseTarget .85s ease-in-out infinite alternate}
+    @keyframes pulseTarget{from{filter:brightness(1)}to{filter:brightness(1.25)}}
+    .tile.current::before{box-shadow:0 0 0 6px rgba(255,255,255,.90),0 0 26px rgba(255,255,255,.55)}
+    .cat-lineal{background:linear-gradient(145deg,#d8fbff,var(--lineal))}
+    .cat-nucleo{background:linear-gradient(145deg,#ffe1fa,var(--nucleo))}
+    .cat-imagen{background:linear-gradient(145deg,#e1ffe9,var(--imagen))}
+    .cat-matriz{background:linear-gradient(145deg,#fff8cf,var(--matriz))}
+    .cat-espacios{background:linear-gradient(145deg,#f1e8ff,var(--espacios))}
+    .cat-integrador{background:linear-gradient(145deg,#ffe0d6,var(--integrador))}
+    #centerHub{position:absolute;left:470px;top:470px;width:138px;height:138px;border-radius:50%;display:grid;place-items:center;text-align:center;font-weight:1000;color:#061a42;background:radial-gradient(circle at 32% 26%,#fff7d2,#ffd166 56%,#e19722);border:9px solid #fff5ce;box-shadow:0 22px 0 rgba(0,0,0,.18),0 26px 42px rgba(0,0,0,.36),0 0 35px rgba(255,209,102,.50);transform:translate(-50%,-50%) translateZ(46px);z-index:6;cursor:pointer}
+    #centerHub small{display:block;font-size:10px;letter-spacing:.4px;color:#724200;margin-top:4px}
+    .token{position:absolute;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;z-index:30;translate:-50% -50%;transition:left .24s ease,top .24s ease;transform:translateZ(85px);filter:drop-shadow(0 14px 12px rgba(0,0,0,.42))}
+    .token .badge{width:100%;height:100%;border-radius:50%;display:grid;place-items:center;color:#fff;border:3px solid rgba(255,255,255,.85);font-size:12px;font-weight:1000;text-shadow:0 1px 2px rgba(0,0,0,.7)}
+    .token.moving .badge{animation:tokenHop .22s ease-in-out infinite alternate}
+    @keyframes tokenHop{from{transform:translateY(-3px) scale(1)}to{transform:translateY(3px) scale(1.09)}}
+
+    #hud{position:relative;overflow:auto;padding:16px;border-radius:28px;background:var(--glass);border:1px solid var(--line);box-shadow:0 20px 70px rgba(0,0,0,.40);backdrop-filter:blur(14px)}
+    #hud h2{margin:0 0 8px;color:#ffe9a8;font-size:26px}
+    .statusRow{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 12px}
+    .pill{padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.10);font-size:12px;font-weight:900}
+    .controlsCard,.playerCard{padding:13px;border-radius:18px;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.09);margin-top:10px}
+    .playerCard.active{background:rgba(255,209,102,.12);border-color:rgba(255,209,102,.38)}
+    .playerHeader{display:flex;justify-content:space-between;gap:10px;align-items:center}
+    .tokenMini{width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,.6);display:grid;place-items:center;color:#fff;font-size:10px;font-weight:1000}
+    .cheeseTrack{display:flex;gap:5px;flex-wrap:wrap;margin-top:9px}
+    .cheeseDot{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:10px;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.18)}
+    .cheeseDot.on{border-color:rgba(255,255,255,.85);box-shadow:0 0 14px rgba(255,255,255,.22)}
+    #diceWrap{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-top:10px}
+    #diceScene{width:92px;height:92px;perspective:700px;flex:0 0 auto}
+    #dice{position:relative;width:72px;height:72px;margin:10px auto;transform-style:preserve-3d;transform:rotateX(-18deg) rotateY(24deg);transition:transform .9s cubic-bezier(.2,.8,.2,1)}
+    #dice.rolling{animation:diceSpin .9s ease-in-out}
+    @keyframes diceSpin{0%{transform:rotateX(0) rotateY(0)}100%{transform:rotateX(1080deg) rotateY(860deg)}}
+    .face{position:absolute;inset:0;background:linear-gradient(135deg,#fff,#dce8ff);border-radius:14px;border:2px solid #eef5ff;display:grid;place-items:center;color:#10213f;font-size:32px;font-weight:1000;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
+    .face.front{transform:translateZ(36px)}.face.back{transform:rotateY(180deg) translateZ(36px)}.face.right{transform:rotateY(90deg) translateZ(36px)}.face.left{transform:rotateY(-90deg) translateZ(36px)}.face.top{transform:rotateX(90deg) translateZ(36px)}.face.bottom{transform:rotateX(-90deg) translateZ(36px)}
+    .log{padding:12px;border-radius:16px;background:rgba(0,0,0,.23);color:#d9e8ff;line-height:1.45;font-size:13px;min-height:84px;margin-top:10px}
+    .legend{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}
+    .legend .item{display:flex;align-items:center;gap:7px;color:#d9e8ff;font-size:12px}.chip{width:15px;height:15px;border-radius:50%;box-shadow:0 0 10px currentColor}
+
+    .modal{position:fixed;inset:0;background:rgba(0,3,12,.70);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:18px;z-index:60}
+    .modalBox{width:min(1040px,96vw);max-height:92vh;overflow:auto;border-radius:30px;padding:20px;background:linear-gradient(180deg,#102b63,#07142f 72%,#040818);border:1px solid rgba(255,255,255,.15);box-shadow:0 35px 110px rgba(0,0,0,.65)}
+    .questionHeader{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;margin-bottom:14px}
+    .typeTag{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:8px 12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);font-size:12px;font-weight:1000}
+    .qPrompt{padding:18px;border-radius:22px;background:rgba(255,255,255,.065);border:1px solid rgba(255,255,255,.10);font-size:22px;line-height:1.62;color:#f7fbff}
+    .latexContent{line-height:1.72;word-break:break-word}.latexContent mjx-container{font-size:1.13em!important;line-height:1.35!important}.latexContent mjx-container[display="true"]{margin:.55em 0!important;overflow-x:auto;overflow-y:hidden;max-width:100%}
+    #qPrompt mjx-container{font-size:1.18em!important}.optionBtn mjx-container{font-size:1.09em!important}.feedback mjx-container,.hint mjx-container{font-size:1.06em!important}
+    .options{display:grid;gap:12px;margin-top:16px}
+    .optionBtn{width:100%;text-align:left;display:flex;gap:12px;align-items:flex-start;padding:15px 16px;border-radius:18px;background:rgba(255,255,255,.07);color:#fff;border:1px solid rgba(255,255,255,.12);font-size:18px;line-height:1.5}
+    .optionBtn .letter{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.17);font-weight:1000;flex:0 0 auto}.optionBtn.correct{background:rgba(36,217,143,.18);border-color:rgba(36,217,143,.55)}.optionBtn.incorrect{background:rgba(255,94,120,.18);border-color:rgba(255,94,120,.50)}
+    .hint,.feedback{margin-top:14px;padding:14px;border-radius:18px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.11);font-size:16px;line-height:1.62}.hint{background:rgba(0,212,255,.08);border-color:rgba(0,212,255,.28)}.feedback.good{background:rgba(36,217,143,.10);border-color:rgba(36,217,143,.38)}.feedback.bad{background:rgba(255,94,120,.10);border-color:rgba(255,94,120,.38)}
+    .timerBar{height:10px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:10px}.timerFill{height:100%;width:100%;background:linear-gradient(90deg,#24d98f,#ffd166,#ff5e78);transition:width .25s linear}
+    .modalActions{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:14px}
+    .securityOverlay{position:fixed;inset:0;z-index:9999;background:#020712;display:flex;align-items:center;justify-content:center;padding:24px;color:#fff}.securityOverlay::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 30%,rgba(255,209,102,.16),transparent 32%),linear-gradient(180deg,#020712,#07142a)}.securityBox{position:relative;width:min(740px,94vw);padding:28px;border-radius:28px;background:linear-gradient(180deg,rgba(16,43,99,.98),rgba(5,10,28,.98));border:1px solid rgba(255,255,255,.16);box-shadow:0 30px 100px rgba(0,0,0,.65);text-align:center}.securityBox h2{margin:0 0 12px;color:#ffe9a8;font-size:clamp(34px,5vw,64px);letter-spacing:.5px}.securityBox p{line-height:1.55;font-size:18px}.securityCounter{display:inline-block;margin-top:8px;padding:8px 14px;border-radius:999px;background:rgba(255,94,120,.20);border:1px solid rgba(255,94,120,.45);font-weight:1000;color:#ffc1cc}
+    .reportTable{width:100%;border-collapse:collapse;margin-top:12px}.reportTable th,.reportTable td{padding:10px;border-bottom:1px solid rgba(255,255,255,.10);text-align:left;font-size:14px}.toast{position:fixed;left:50%;bottom:18px;translate:-50% 0;z-index:100;padding:12px 16px;border-radius:14px;background:rgba(5,12,30,.95);border:1px solid rgba(255,255,255,.13);box-shadow:0 12px 30px rgba(0,0,0,.34)}
+
+    #centerHub.possible{outline:6px solid rgba(255,255,255,.95);box-shadow:0 0 0 10px rgba(255,209,102,.24),0 0 42px rgba(255,209,102,.96),0 22px 0 rgba(0,0,0,.18),0 26px 42px rgba(0,0,0,.36),0 0 35px rgba(255,209,102,.50);animation:pulseTarget .85s ease-in-out infinite alternate}
+    #centerHub.current{outline:6px solid rgba(255,255,255,.92);box-shadow:0 0 0 8px rgba(36,217,143,.22),0 0 34px rgba(36,217,143,.82),0 22px 0 rgba(0,0,0,.18),0 26px 42px rgba(0,0,0,.36),0 0 35px rgba(255,209,102,.50)}
+    .reportGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin:14px 0}
+    .reportCard{padding:14px;border-radius:18px;background:rgba(255,255,255,.065);border:1px solid rgba(255,255,255,.12)}
+    .reportCard h4{margin:0 0 8px;color:#ffe9a8}
+    .scoreBarWrap{height:16px;border-radius:999px;background:rgba(255,255,255,.12);overflow:hidden;margin:8px 0}
+    .scoreBarFill{height:100%;border-radius:999px;background:linear-gradient(90deg,#ff5e78,#ffd166,#24d98f)}
+    .topicMiniBar{height:10px;border-radius:999px;background:rgba(255,255,255,.12);overflow:hidden;min-width:110px}
+    .topicMiniFill{height:100%;border-radius:999px;background:linear-gradient(90deg,#ff5e78,#ffd166,#24d98f)}
+    .chartBox{margin:14px 0;padding:12px;border-radius:18px;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.10);overflow:auto}
+    .chartBox svg{max-width:100%;height:auto;display:block}
+    .annulledBanner{padding:18px;border-radius:22px;background:linear-gradient(135deg,rgba(255,94,120,.28),rgba(255,209,102,.13));border:2px solid rgba(255,94,120,.65);box-shadow:0 0 30px rgba(255,94,120,.25);margin-bottom:14px}
+    .annulledBanner h2{margin:0;color:#ffb5c0;font-size:32px}
+
+    @media(max-width:1320px){#app{grid-template-columns:1fr}#sceneWrap{height:64vh}#hud{height:calc(36vh - 42px)}#boardArea{transform-origin:center center}.hero,.twoCols{grid-template-columns:1fr}}
+    @media(max-width:900px){#app{padding:8px;gap:8px}.panel{padding:18px}.topicGrid{grid-template-columns:1fr}.playerRow{grid-template-columns:1fr}#boardArea{width:820px;height:820px;scale:.84}.tile{width:78px;height:64px}.qPrompt{font-size:19px}.optionBtn{font-size:16px}}
+    .answerReview{display:grid;gap:8px;margin-top:2px}
+    .answerReview p{margin:0 0 4px 0}
+    .answerReview .answerState{font-size:19px;color:#ffe9a8}
+    .answerReview b{color:#ffe9a8}
+    .feedback.good .answerReview b{color:#b9ffd9}
+    .feedback.bad .answerReview b{color:#ffc1cc}
+
+    .clockWidget{position:fixed;right:16px;top:12px;z-index:10000;display:flex;align-items:center;gap:8px;padding:9px 13px;border-radius:999px;background:rgba(5,12,30,.82);border:1px solid rgba(255,255,255,.18);box-shadow:0 12px 32px rgba(0,0,0,.32);backdrop-filter:blur(10px);font-weight:1000;color:#ffe9a8;letter-spacing:.3px}
+    .clockWidget small{color:#cfe0ff;font-weight:800;letter-spacing:0}
+    .modalActions .pauseBtn{background:linear-gradient(135deg,#e6e1ff,#a77dff);color:#12082b}
+    .integerAnswerBox{display:grid;grid-template-columns:minmax(160px,1fr) auto;gap:10px;margin-top:16px}
+    .integerAnswerBox input{width:100%;padding:15px 16px;border-radius:18px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.09);color:#fff;font-size:22px;font-weight:900;outline:none}
+    .typeNote{margin-top:10px;color:#dceaff;font-size:14px;line-height:1.45}
+    @media(max-width:680px){.clockWidget{right:8px;top:8px;font-size:13px}.integerAnswerBox{grid-template-columns:1fr}.screen{padding:10px}.modalBox{padding:14px}}
+    @media print{body{background:white!important;color:#111!important;overflow:visible}.noPrint,#app,.screen,.modal:not(#reportModal){display:none!important}#reportModal{position:static!important;display:block!important;background:white!important;color:#111!important}.modalBox{box-shadow:none!important;background:white!important;color:#111!important;border:0!important}.reportTable th,.reportTable td{border-bottom:1px solid #ddd;color:#111}}
+  
+    html,body{width:100%;height:100%;}
+    body.security-armed{overscroll-behavior:none;}
+    .screen,.modal{min-height:100dvh;}
+    #app{min-height:100dvh;width:100vw;}
+    @media (max-width:1100px){#app{grid-template-columns:1fr;overflow:auto}#sceneWrap{min-height:min(78vh,760px)}#hud{max-height:none}#boardArea{margin:0 auto}.modalBox{width:min(96vw,900px)}}
+    @media (max-width:760px){.hero,.twoCols{grid-template-columns:1fr}.panel{padding:16px}.card{padding:16px}#sceneWrap{padding:10px}.modalBox{padding:16px}.qPrompt{font-size:clamp(1rem,3.5vw,1.25rem)}.options{grid-template-columns:1fr}.statusRow{grid-template-columns:1fr}.footerActions,.modalActions{flex-direction:column;align-items:stretch}.footerActions button,.modalActions button{width:100%}}
+    .finishNotice{border:1px solid rgba(103,232,249,.35);background:linear-gradient(135deg,rgba(14,165,233,.16),rgba(34,197,94,.10));border-radius:20px;padding:18px;margin:12px 0;box-shadow:0 18px 44px rgba(0,0,0,.22)}
+    .finishNotice h3{margin:0 0 8px;color:#a7f3d0}.finishNotice p{margin:6px 0;color:#e9f3ff}
+
+  </style>
+</head>
+<body>
+  <div id="currentClock" class="clockWidget"><small>Hora actual</small><span>--:--:--</span></div>
+  <div id="lockScreen" class="screen">
+    <div class="panel">
+      <div class="hero">
+        <div class="lockArt">
+          <div class="tag">Deluxe Edition · Álgebra Lineal</div>
+          <h1>Trivial Pursuit<br/>Álgebra Lineal</h1>
+          <p class="sub">Transformaciones lineales, núcleo, imagen, matriz asociada, espacios de polinomios, matrices, sucesiones y soluciones de ecuaciones diferenciales.</p>
+          <div class="megaBoard"></div>
+        </div>
+        <div class="card">
+          <div class="tag">Acceso docente</div>
+          <h2 style="margin:0 0 10px;color:#ffe9a8">Desbloquear configuración</h2>
+          <p class="note">Ingrese la clave docente para configurar y comenzar la partida. La clave es la hora militar actual del dispositivo en formato HHMM. Esta clave no se muestra al estudiante durante el juego.</p>
+          <div class="field"><label for="teacherPassword">Clave docente</label><input id="teacherPassword" type="password" placeholder="Hora militar HHMM" autocomplete="off" /></div>
+          <div class="footerActions"><button class="primary" id="unlockBtn">Ingresar</button></div>
+          <p id="lockError" class="note" style="color:#ffb5b5"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="setupScreen" class="screen hidden">
+    <div class="panel">
+      <div class="tag">Configuración de partida</div>
+      <h1>Personaliza el juego</h1>
+      <p class="sub">El tablero conserva la dinámica de Trivial Pursuit: anillo exterior, rutas hacia el centro, quesitos por categoría y pregunta final. Las preguntas aparecen automáticamente cuando la ficha llega a la casilla elegida.</p>
+      <div class="twoCols" style="margin-top:18px">
+        <div class="card">
+          <h2 style="margin:0 0 12px;color:#ffe9a8">Modo de evaluación</h2>
+          <div class="topicGrid">
+            <div class="topic"><b style="color:var(--lineal)">TL</b> Transformaciones lineales</div>
+            <div class="topic"><b style="color:var(--nucleo)">NU</b> Núcleo y nulidad</div>
+            <div class="topic"><b style="color:var(--imagen)">IM</b> Imagen y rango</div>
+            <div class="topic"><b style="color:var(--matriz)">MA</b> Matriz asociada</div>
+            <div class="topic"><b style="color:var(--espacios)">EV</b> Espacios especiales</div>
+            <div class="topic"><b style="color:var(--integrador)">IN</b> Integrador</div>
+          </div>
+          <div class="field" style="margin-top:14px"><label for="gameMinutes">Tiempo total</label><select id="gameMinutes"><option value="0">Sin tiempo total</option><option value="20">20 minutos</option><option value="35">35 minutos</option><option value="50" selected>50 minutos</option></select></div>
+        </div>
+        <div class="card">
+          <h2 style="margin:0 0 12px;color:#ffe9a8">Jugadores</h2>
+          <div class="field"><label for="playerCount">Número de jugadores</label><select id="playerCount"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></div>
+          <div id="playersSetup"></div>
+        </div>
+      </div>
+      <div class="footerActions"><button class="ghost" id="backLockBtn">Volver</button><button class="primary" id="startGameBtn">Iniciar partida</button></div>
+    </div>
+  </div>
+
+  <main id="app" class="hidden">
+    <section id="sceneWrap">
+      <div id="boardArea" class="view-front">
+        <div class="boardShadow"></div>
+        <div id="boardBase"></div>
+        <div id="boardCircle"></div>
+        <div id="connectors"></div>
+        <div id="boardElements"></div>
+        <div id="centerHub">ÁLGEBRA<br/>LINEAL<small>FINAL</small></div>
+        <div id="tokenLayer"></div>
+      </div>
+    </section>
+    <aside id="hud">
+      <h2>Trivial Pursuit · Álgebra Lineal</h2>
+      <div class="statusRow"><span class="pill" id="turnPill">Turno</span><span class="pill" id="timePill">Tiempo</span><span class="pill" id="securityPill">Salidas: 0</span></div>
+      <div class="controlsCard">
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="mini secondary" data-view="front">Vista frontal</button><button class="mini secondary" data-view="3d">Vista 3D</button><button class="mini secondary" data-view="orbit">Vista 360°</button><button class="mini ghost" id="fullBtn">Pantalla completa</button></div>
+        <div id="diceWrap">
+          <div id="diceScene"><div id="dice"><div class="face front">1</div><div class="face back">6</div><div class="face right">3</div><div class="face left">4</div><div class="face top">2</div><div class="face bottom">5</div></div></div>
+          <div style="flex:1"><button class="primary" id="rollBtn">Lanzar dado</button><div class="note" id="diceInfo">Al lanzar, se iluminarán las casillas posibles. El jugador elige una.</div></div>
+        </div>
+        <div class="log" id="logBox">Configura la partida y comienza. La pregunta se abrirá automáticamente al caer en la casilla.</div>
+      </div>
+      <div class="legend">
+        <div class="item"><span class="chip" style="background:var(--lineal);color:var(--lineal)"></span> TL Linealidad</div>
+        <div class="item"><span class="chip" style="background:var(--nucleo);color:var(--nucleo)"></span> NU Núcleo</div>
+        <div class="item"><span class="chip" style="background:var(--imagen);color:var(--imagen)"></span> IM Imagen</div>
+        <div class="item"><span class="chip" style="background:var(--matriz);color:var(--matriz)"></span> MA Matriz</div>
+        <div class="item"><span class="chip" style="background:var(--espacios);color:var(--espacios)"></span> EV Espacios</div>
+        <div class="item"><span class="chip" style="background:var(--integrador);color:var(--integrador)"></span> IN Integrador</div>
+      </div>
+      <div id="playersList"></div>
+      <div class="controlsCard" style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="danger" id="finishBtn">Finalizar partida</button>
+        <button class="ghost" id="mainMenuBtn">Regresar al menú principal</button>
+        <button class="danger" id="closeQuizBtn">Cerrar Quiz y pestaña</button>
+        <button class="primary" id="newGameBtn">Nueva partida</button>
+      </div>
+    </aside>
+  </main>
+
+  <div id="questionModal" class="modal hidden">
+    <div class="modalBox">
+      <div class="questionHeader"><div><span class="typeTag" id="qCategory"></span><h2 id="qTitle" style="margin:10px 0 0;color:#ffe9a8">Pregunta</h2></div><span class="pill" id="qPlayer"></span></div>
+      <div class="timerBar"><div class="timerFill" id="questionTimer"></div></div>
+      <div id="qPrompt" class="qPrompt latexContent"></div>
+      <div class="hint latexContent" id="hintBox"></div>
+      <div class="options" id="optionsBox"></div>
+      <div class="feedback latexContent hidden" id="feedbackBox"></div>
+      <div class="modalActions"><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="ghost" id="showHintBtn">Ver pista</button><button class="pauseBtn" id="pauseQuestionBtn">Detener tiempo para pensar</button></div><button class="primary hidden" id="continueBtn">Continuar</button></div>
+    </div>
+  </div>
+
+  <div id="securityOverlay" class="securityOverlay hidden">
+    <div class="securityBox">
+      <h2>PARTIDA BLOQUEADA</h2>
+      <p id="securityMessage">Se detectó una salida de pantalla, cambio de pestaña, pérdida de foco o salida de pantalla completa. El intento quedó registrado en el informe.</p>
+      <div class="field" style="text-align:left"><label for="securityPassword">Clave docente para continuar</label><input id="securityPassword" type="password" placeholder="••••" /></div>
+      <div class="footerActions" style="justify-content:center"><button class="primary" id="unlockSecurityBtn">Desbloquear</button></div>
+      <p id="securityError" class="note" style="color:#ffb5b5"></p>
+    </div>
+  </div>
+
+  <div id="reportModal" class="modal hidden">
+    <div class="modalBox">
+      <h2 style="color:#ffe9a8;margin-top:0">Partida finalizada</h2>
+      <div id="reportContent"></div>
+      <div class="modalActions noPrint">
+        <button class="secondary" id="reportMenuBtn">Regresar a clave docente</button>
+        <button class="success" id="reportNewGameBtn">Nueva partida</button>
+        <button class="danger" id="reportCloseTabBtn">Cerrar pestaña</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const CATS = [
+  {key:'lineal', short:'TL', name:'Transformaciones lineales', icon:'T', color:'var(--lineal)', cls:'cat-lineal'},
+  {key:'nucleo', short:'NU', name:'Núcleo y nulidad', icon:'N', color:'var(--nucleo)', cls:'cat-nucleo'},
+  {key:'imagen', short:'IM', name:'Imagen y rango', icon:'R', color:'var(--imagen)', cls:'cat-imagen'},
+  {key:'matriz', short:'MA', name:'Matriz asociada', icon:'A', color:'var(--matriz)', cls:'cat-matriz'},
+  {key:'espacios', short:'EV', name:'Espacios vectoriales especiales', icon:'V', color:'var(--espacios)', cls:'cat-espacios'},
+  {key:'integrador', short:'IN', name:'Integrador', icon:'★', color:'var(--integrador)', cls:'cat-integrador'}
+];
+const catMap = Object.fromEntries(CATS.map(c=>[c.key,c]));
+const playerColors = ['#00d4ff','#ff4fd8','#3cff9d','#ffd447','#a77dff','#ff7b54'];
+const outerPattern = ['lineal','nucleo','imagen','matriz','espacios','integrador','lineal','nucleo','imagen','matriz','espacios','integrador','lineal','nucleo','imagen','matriz','espacios','integrador','lineal','nucleo','imagen','matriz','espacios','integrador'];
+const gateways = {lineal:0,nucleo:4,imagen:8,matriz:12,espacios:16,integrador:20};
+let positions = {}, adjacency = {}, currentTargets = [];
+let players = [], currentPlayer = 0, gameActive = false, totalViolations = 0, totalSeconds = 0, timerId = null;
+let currentQuestion = null, questionSeconds = 75, questionDuration = 75, questionPaused = false, qTimerId = null;
+let startTime = null, historyLog = [], exitEventsLog = [], examCancelled = false;
+let turnStreak = 0, authorizedExitUntil = 0, securityArmed = false;
+
+const QUESTIONS = {
+lineal:[
+{p:`Sea \\(T:\\mathbb R^3\\to\\mathbb R^2\\) dada por \\[T(x,y,z)=(2x-y+z,\\,x+3z).\\] ¿Cuál afirmación justifica correctamente que \\(T\\) es lineal?`,o:[`Cada componente de \\(T\\) es combinación lineal de \\(x,y,z\\), sin términos constantes ni productos de variables.`,`Como el codominio es \\(\\mathbb R^2\\), toda función hacia \\(\\mathbb R^2\\) es lineal.`,`La transformación es lineal porque aparece la variable \\(x\\).`,`No es lineal porque reduce la dimensión de \\(3\\) a \\(2\\).`],a:0,h:`Revise si se cumple \\(T(\\alpha u+\\beta v)=\\alpha T(u)+\\beta T(v)\\). Las componentes no pueden tener términos independientes.`,f:`Correcto: las dos componentes son expresiones lineales homogéneas en \\(x,y,z\\). Reducir dimensión no impide la linealidad.`},
+{p:`Considere \\(S:P_2\\to P_2\\), \\[S(p(x))=p(x)+4.\\] ¿Qué ocurre con \\(S\\)?`,o:[`No es lineal, porque \\(S(0)=4\\neq 0\\).`,`Es lineal, porque suma una constante.`,`Es lineal solo si \\(p(x)\\) tiene grado \\(2\\).`,`Es inyectiva y por eso es lineal.`],a:0,h:`Una transformación lineal siempre envía el vector cero del dominio al vector cero del codominio.`,f:`Correcto: el polinomio cero se transforma en el polinomio constante \\(4\\), por tanto falla una condición necesaria de linealidad.`},
+{p:`Sea \\(D:P_2\\to P_1\\), \\(D(p)=p'\\). Si \\(p(x)=a+bx+cx^2\\), entonces \\(D(p)=b+2cx\\). ¿Cuál opción describe mejor a \\(D\\)?`,o:[`Es lineal, porque la derivada respeta suma y multiplicación por escalares.`,`No es lineal, porque baja el grado del polinomio.`,`No es lineal, porque \\(D(1)=0\\).`,`Es lineal solamente para polinomios mónicos.`],a:0,h:`Bajar de grado no impide ser lineal. Verifique \\(D(p+q)=D(p)+D(q)\\).`,f:`Correcto: la derivación es un operador lineal. Que \\(D(1)=0\\) no contradice la linealidad.`},
+{p:`Sea \\(T:M_{2\\times2}\\to M_{2\\times2}\\), \\(T(A)=CA-AC\\), con \\(C\\) fija. ¿Por qué \\(T\\) es lineal?`,o:[`Porque la multiplicación por una matriz fija distribuye sobre suma y escalares.`,`Porque cualquier producto de matrices es conmutativo.`,`Porque \\(CA-AC=0\\) para toda matriz \\(A\\).`,`Porque el dominio y codominio tienen dimensión \\(4\\).`],a:0,h:`Use \\(C(\\alpha A+\\beta B)-(\\alpha A+\\beta B)C\\).`,f:`Correcto: al expandir, se obtiene \\(\\alpha(CA-AC)+\\beta(CB-BC)\\). No se necesita conmutatividad.`},
+{p:`Sea \\(T:\\mathbb R^2\\to\\mathbb R^2\\) definida por \\(T(x,y)=(x+1,y)\\). ¿Cuál es el diagnóstico correcto?`,o:[`No es lineal, porque \\(T(0,0)=(1,0)\\neq(0,0)\\).`,`Es lineal, porque conserva la segunda coordenada.`,`Es lineal, porque es una traslación.`,`Es lineal, porque su gráfica es una recta.`],a:0,h:`Las traslaciones no son transformaciones lineales salvo la traslación nula.`,f:`Correcto: una transformación lineal debe enviar el origen al origen.`},
+{p:`Si una función \\(T:V\\to W\\) satisface \\(T(u+v)=T(u)+T(v)\\) y \\(T(\\lambda u)=\\lambda T(u)\\), entonces:`,o:[`\\(T\\) es una transformación lineal.`,`\\(T\\) necesariamente es inyectiva.`,`\\(T\\) necesariamente es sobreyectiva.`,`\\(V\\) y \\(W\\) tienen la misma dimensión.`],a:0,h:`Linealidad no implica por sí sola inyectividad ni sobreyectividad.`,f:`Correcto: esas son precisamente las dos propiedades que definen una transformación lineal.`}
+],
+nucleo:[
+{p:`Sea \\(T:\\mathbb R^3\\to\\mathbb R^2\\), \\[T(x,y,z)=(x-y,\\,y-z).\\] ¿Cuál es \\(\\operatorname{Nu}(T)\\)?`,o:[`\\(\\operatorname{Gen}\{(1,1,1)\}\\)`,`\\(\\operatorname{Gen}\{(1,0,1)\}\\)`,`\\(\\mathbb R^3\\)`,`\\(\{(0,0,0)\}\\)`],a:0,h:`Para el núcleo, iguale las componentes a cero: \\(x-y=0\\), \\(y-z=0\\).`,f:`Correcto: de \\(x=y\\) y \\(y=z\\), todo vector del núcleo tiene la forma \\(t(1,1,1)\\).`},
+{p:`Si \\(A_T\\) es una matriz \\(3\\times4\\) con rango \\(3\\), asociada a \\(T:V\\to W\\), ¿cuál es \\(\\dim(\\operatorname{Nu}(T))\\)?`,o:[`\\(1\\)`,`\\(0\\)`,`\\(3\\)`,`\\(4\\)`],a:0,h:`Use rango-nulidad: \\(\\dim V=\\operatorname{rang}(T)+\\operatorname{nul}(T)\\). Aquí \\(\\dim V=4\\).`,f:`Correcto: \\(4=3+\\operatorname{nul}(T)\\), así que la nulidad es \\(1\\).`},
+{p:`Sea \\(D:P_2\\to P_1\\), \\(D(p)=p'\\). ¿Cuál es una base de \\(\\operatorname{Nu}(D)\\)?`,o:[`\\(\{1\}\\)`,`\\(\{x\}\\)`,`\\(\{x^2\}\\)`,`\\(\{1,x\}\\)`],a:0,h:`El núcleo son los polinomios cuya derivada es el polinomio cero.`,f:`Correcto: los únicos polinomios con derivada cero son los constantes, por eso una base es \\(\{1\}\\).`},
+{p:`Sea \\(T:P_2\\to P_2\\), \\[T(a+bx+cx^2)=a-cx^2.\\] ¿Qué condición debe satisfacer \\(p(x)=a+bx+cx^2\\) para estar en \\(\\operatorname{Nu}(T)\\)?`,o:[`\\(a=0\\) y \\(c=0\\); \\(b\\) libre.`,`\\(b=0\\) y \\(c=0\\); \\(a\\) libre.`,`\\(a=c\\); \\(b\\) libre.`,`\\(a=b=c\\).`],a:0,h:`Para estar en el núcleo, el resultado debe ser el polinomio cero: \\(a-cx^2=0\\).`,f:`Correcto: se necesita \\(a=0\\) y \\(c=0\\). Entonces \\(p(x)=bx\\).`},
+{p:`Si \\(T:V\\to W\\) es inyectiva, entonces su núcleo cumple:`,o:[`\\(\\operatorname{Nu}(T)=\{0_V\}\\)`,`\\(\\operatorname{Nu}(T)=V\\)`,`\\(\\dim\\operatorname{Nu}(T)=\\dim W\\)`,`El núcleo no existe.`],a:0,h:`Una transformación lineal es inyectiva si y solo si su núcleo contiene únicamente el vector cero.`,f:`Correcto: el criterio fundamental es \\(T\\) inyectiva \\(\\Leftrightarrow\\operatorname{Nu}(T)=\{0\}\\).`},
+{p:`Sea \\(A=\\begin{pmatrix}1&-1&0\\\\0&1&-1\\end{pmatrix}\\). El espacio nulo de \\(A\\) está dado por:`,o:[`\\(\\operatorname{Gen}\{(1,1,1)\}\\)`,`\\(\\operatorname{Gen}\{(1,-1,1)\}\\)`,`\\(\\operatorname{Gen}\{(0,1,1)\}\\)`,`\\(\{0\}\\)`],a:0,h:`Resuelva \\(x-y=0\\), \\(y-z=0\\).`,f:`Correcto: las ecuaciones obligan \\(x=y=z\\), luego el núcleo está generado por \\((1,1,1)\\).`}
+],
+imagen:[
+{p:`Sea \\(T:\\mathbb R^3\\to\\mathbb R^2\\), \\[T(x,y,z)=(2x-y+z,\\,x+3z).\\] La matriz asociada tiene columnas \\((2,1),(-1,0),(1,3)\\). ¿Cuál es \\(\\operatorname{Im}(T)\\)?`,o:[`\\(\\mathbb R^2\\)`,`Una recta de \\(\\mathbb R^2\\)`,`\\(\{(0,0)\}\\)`,`Un plano de \\(\\mathbb R^3\\)`],a:0,h:`Basta verificar si dos columnas son linealmente independientes en \\(\\mathbb R^2\\).`,f:`Correcto: \\((2,1)\\) y \\((-1,0)\\) no son múltiplos, por tanto generan \\(\\mathbb R^2\\).`},
+{p:`Si \\(T:P_2\\to P_1\\) está dada por \\(T(p)=p'\\), entonces la imagen de \\(T\\) es:`,o:[`\\(P_1\\)`,`\\(P_2\\)`,`Solo los polinomios constantes`,`\\(\{0\}\\)`],a:0,h:`Dado cualquier \\(q(x)=\\alpha+\\beta x\\), busque un \\(p\\in P_2\\) tal que \\(p'=q\\).`,f:`Correcto: todo polinomio lineal aparece como derivada de un polinomio cuadrático.`},
+{p:`Sea \\(T:M_{2\\times2}\\to P_2\\), \\[T\\begin{pmatrix}a&b\\\\c&d\\end{pmatrix}=a+bx+cx^2.\\] ¿Cuál es la imagen?`,o:[`\\(P_2\\)`,`Un subespacio de dimensión \\(2\\)`,`Solo polinomios sin término cuadrático`,`Solo polinomios constantes`],a:0,h:`Los coeficientes de \\(1,x,x^2\\) pueden elegirse como \\(a,b,c\\).`,f:`Correcto: el parámetro \\(d\\) no afecta, pero \\(a,b,c\\) permiten obtener cualquier polinomio de \\(P_2\\).`},
+{p:`Si \\(\\dim V=5\\) y \\(\\dim\\operatorname{Nu}(T)=2\\), ¿cuál es \\(\\dim\\operatorname{Im}(T)\\)?`,o:[`\\(3\\)`,`\\(2\\)`,`\\(5\\)`,`No se puede saber con rango-nulidad.`],a:0,h:`Use \\(\\dim V=\\operatorname{nul}(T)+\\operatorname{rang}(T)\\).`,f:`Correcto: \\(5=2+\\dim\\operatorname{Im}(T)\\), luego el rango es \\(3\\).`},
+{p:`Una transformación \\(T:V\\to W\\) es sobreyectiva cuando:`,o:[`\\(\\operatorname{Im}(T)=W\\)`,`\\(\\operatorname{Nu}(T)=\{0\}\\)`,`\\(T(0)=0\\)`,`\\(\\dim V=\\dim W\\) siempre.`],a:0,h:`Sobreyectividad significa que todo vector del codominio es imagen de algún vector del dominio.`,f:`Correcto: la condición exacta es que la imagen coincida con el codominio.`},
+{p:`Si \\(T:\\mathbb R^2\\to\\mathbb R^3\\) es lineal, ¿puede ser sobreyectiva?`,o:[`No, porque \\(\\dim\\operatorname{Im}(T)\\le 2<3\\).`,`Sí, toda transformación hacia \\(\\mathbb R^3\\) es sobreyectiva.`,`Sí, si el núcleo es cero.`,`Depende de si tiene términos constantes.`],a:0,h:`La imagen de una transformación desde un espacio de dimensión \\(2\\) puede tener dimensión máxima \\(2\\).`,f:`Correcto: no puede llenar un espacio de dimensión \\(3\\).`}
+],
+matriz:[
+{p:`Sea \\(T:P_2\\to P_1\\), \\(T(a+bx+cx^2)=b+(a+2c)x\\). Usando \\(B=\{1,x,x^2\}\\) y \\(B'=\{1,x\}\\), ¿cuál es \\(A_T\\)?`,o:[`\\(\\begin{pmatrix}0&1&0\\\\1&0&2\\end{pmatrix}\\)`,`\\(\\begin{pmatrix}1&0&2\\\\0&1&0\\end{pmatrix}\\)`,`\\(\\begin{pmatrix}0&1\\\\1&0\\\\0&2\\end{pmatrix}\\)`,`\\(\\begin{pmatrix}1&1&2\\end{pmatrix}\\)`],a:0,h:`Las columnas son las coordenadas de \\(T(1),T(x),T(x^2)\\) en la base \\(B'\\).`,f:`Correcto: \\(T(1)=x\\), \\(T(x)=1\\), \\(T(x^2)=2x\\), de ahí las columnas \\((0,1),(1,0),(0,2)\\).`},
+{p:`Sea \\(T:\\mathbb R^2\\to\\mathbb R^3\\), \\(T(a,b)=(-3a,\\,a+b,\\,b)\\). La matriz en bases canónicas es:`,o:[`\\(\\begin{pmatrix}-3&0\\\\1&1\\\\0&1\\end{pmatrix}\\)`,`\\(\\begin{pmatrix}-3&1&0\\\\0&1&1\\end{pmatrix}\\)`,`\\(\\begin{pmatrix}-3&0\\\\0&1\\\\1&1\\end{pmatrix}\\)`,`\\(\\begin{pmatrix}a&b\\end{pmatrix}\\)`],a:0,h:`La primera columna es \\(T(1,0)\\) y la segunda es \\(T(0,1)\\).`,f:`Correcto: \\(T(1,0)=(-3,1,0)\\) y \\(T(0,1)=(0,1,1)\\).`},
+{p:`Si una matriz asociada \\(A_T\\) tiene tamaño \\(4\\times3\\), entonces la transformación tiene:`,o:[`Dominio de dimensión \\(3\\) y codominio de dimensión \\(4\\).`,`Dominio de dimensión \\(4\\) y codominio de dimensión \\(3\\).`,`Dominio y codominio de dimensión \\(4\\).`,`Dominio y codominio de dimensión \\(3\\).`],a:0,h:`Las columnas corresponden a la dimensión del dominio; las filas a la dimensión del codominio.`,f:`Correcto: una matriz \\(m\\times n\\) representa una transformación desde dimensión \\(n\\) hacia dimensión \\(m\\).`},
+{p:`Sea \\(T:M_{2\\times2}\\to P_2\\), \\(T\\begin{pmatrix}a&b\\\\c&d\\end{pmatrix}=a+bx+cx^2\\). Con la base canónica de \\(M_{2\\times2}\\), la columna correspondiente a \\(E_{22}\\) es:`,o:[`\\(\\begin{pmatrix}0\\\\0\\\\0\\end{pmatrix}\\)`,`\\(\\begin{pmatrix}1\\\\0\\\\0\\end{pmatrix}\\)`,`\\(\\begin{pmatrix}0\\\\1\\\\0\\end{pmatrix}\\)`,`\\(\\begin{pmatrix}0\\\\0\\\\1\\end{pmatrix}\\)`],a:0,h:`En \\(E_{22}\\), se tiene \\(d=1\\) y \\(a=b=c=0\\). Observe que \\(d\\) no aparece en \\(T\\).`,f:`Correcto: \\(T(E_{22})=0\\), por eso la columna es el vector cero en coordenadas de \\(P_2\\).`},
+{p:`Para construir la matriz asociada de \\(T:V\\to W\\) respecto a bases \\(B=\{v_1,\\dots,v_n\}\\) y \\(B'\\), se debe:`,o:[`Calcular \\(T(v_i)\\) y poner \\([T(v_i)]_{B'}\\) como columna \\(i\\).`,`Poner los vectores de \\(B\\) como filas.`,`Calcular únicamente \\(T(0)\\).`,`Escalonar siempre la matriz identidad.`],a:0,h:`La matriz asociada codifica cómo actúa \\(T\\) sobre los vectores de la base del dominio.`,f:`Correcto: cada columna representa la imagen de un vector de la base del dominio en coordenadas de la base del codominio.`},
+{p:`Si \\([T(v)]_{B'}=A_T[v]_B\\), entonces \\(A_T\\) actúa sobre:`,o:[`Las coordenadas de \\(v\\) en la base del dominio.`,`El vector \\(v\\) escrito siempre en base canónica.`,`Los valores propios de \\(T\\).`,`La dimensión del núcleo solamente.`],a:0,h:`La igualdad usa vectores de coordenadas, no necesariamente los vectores originales.`,f:`Correcto: la matriz asociada multiplica \\([v]_B\\) y produce \\([T(v)]_{B'}\\).`}
+],
+espacios:[
+{p:`Sea \\(V=\{y:y''-y=0\}\\), con base \\(B=\{e^t,e^{-t}\}\\). Defina \\(T(y)=(y(0),y'(0))\\). ¿Cuál es la matriz de \\(T\\) respecto a \\(B\\) y la base canónica de \\(\\mathbb R^2\\)?`,o:[`\\(\\begin{pmatrix}1&1\\\\1&-1\\end{pmatrix}\\)`,`\\(\\begin{pmatrix}1&0\\\\0&1\\end{pmatrix}\\)`,`\\(\\begin{pmatrix}1&-1\\\\1&1\\end{pmatrix}\\)`,`\\(\\begin{pmatrix}0&1\\\\1&0\\end{pmatrix}\\)`],a:0,h:`Calcule \\(T(e^t)=(1,1)\\) y \\(T(e^{-t})=(1,-1)\\).`,f:`Correcto: esas dos imágenes son las columnas de la matriz asociada.`},
+{p:`Sea \\(W=\{y:y''+4y=0\}\\), con base \\(B=\{\\cos(2t),\\sin(2t)\}\\). Si \\(D(y)=y'\\), entonces \\(D(\\cos(2t))\\) es:`,o:[`\\(-2\\sin(2t)\\)`,`\\(2\\cos(2t)\\)`,`\\(\\sin(2t)\\)`,`\\(0\\)`],a:0,h:`Use la regla de la cadena: \\(\\frac{d}{dt}\\cos(2t)=-2\\sin(2t)\\).`,f:`Correcto: la derivada de \\(\\cos(2t)\\) es \\(-2\\sin(2t)\\).`},
+{p:`Sea \\(U=\{(u_n):u_{n+2}=5u_{n+1}-6u_n\}\\), con base \\(B=\{(2^n),(3^n)\}\\). Si \\(L((u_n))=(u_{n+1})\\), entonces \\(L((2^n))\\) es:`,o:[`\\(2(2^n)\\)`,`\\(3(3^n)\\)`,`\\((2^n)+(3^n)\\)`,`\\(0\\)`],a:0,h:`Desplace la sucesión: \\(2^{n+1}=2\\cdot2^n\\).`,f:`Correcto: el corrimiento actúa multiplicando la sucesión \\((2^n)\\) por \\(2\\).`},
+{p:`En el espacio \\(U\\) anterior, la matriz de \\(L\\) en la base \\(B=\{(2^n),(3^n)\}\\) es:`,o:[`\\(\\begin{pmatrix}2&0\\\\0&3\\end{pmatrix}\\)`,`\\(\\begin{pmatrix}0&2\\\\3&0\\end{pmatrix}\\)`,`\\(\\begin{pmatrix}1&1\\\\2&3\\end{pmatrix}\\)`,`\\(\\begin{pmatrix}5&-6\\\\1&0\\end{pmatrix}\\)`],a:0,h:`Calcule las imágenes de los dos vectores de la base: \\(L(2^n)=2(2^n)\\), \\(L(3^n)=3(3^n)\\).`,f:`Correcto: las coordenadas de las imágenes son \\((2,0)\\) y \\((0,3)\\).`},
+{p:`Sea \\(H=\{\\begin{pmatrix}a&b\\\\b&a\\end{pmatrix}:a,b\\in\\mathbb R\}\\). ¿Cuál es \\(\\dim H\\)?`,o:[`\\(2\\)`,`\\(4\\)`,`\\(3\\)`,`\\(1\\)`],a:0,h:`La matriz queda determinada solo por los parámetros libres \\(a\\) y \\(b\\).`,f:`Correcto: una base puede ser \\(\{\\begin{pmatrix}1&0\\\\0&1\\end{pmatrix},\\begin{pmatrix}0&1\\\\1&0\\end{pmatrix}\}\\).`},
+{p:`Sea \\(P_2\\) con base \\(\{1,x,x^2\}\\). El polinomio \\(p(x)=2-3x+5x^2\\) tiene vector de coordenadas:`,o:[`\\(\\begin{pmatrix}2\\\\-3\\\\5\\end{pmatrix}\\)`,`\\(\\begin{pmatrix}5\\\\-3\\\\2\\end{pmatrix}\\)`,`\\(\\begin{pmatrix}2\\\\5\\\\-3\\end{pmatrix}\\)`,`\\(\\begin{pmatrix}-3\\\\2\\\\5\\end{pmatrix}\\)`],a:0,h:`En la base canónica de \\(P_2\\), las coordenadas son los coeficientes de \\(1,x,x^2\\).`,f:`Correcto: los coeficientes son \\(2,-3,5\\).`}
+],
+integrador:[
+{p:`Sea \\(T:P_2\\to P_1\\), \\(T(p)=p'\\). ¿Cuál afirmación es correcta?`,o:[`\\(T\\) es sobreyectiva pero no inyectiva.`,`\\(T\\) es inyectiva pero no sobreyectiva.`,`\\(T\\) es isomorfismo.`,`\\(T\\) no es lineal.`],a:0,h:`Compare dimensiones y revise el núcleo: los constantes van a cero.`,f:`Correcto: el núcleo tiene dimensión \\(1\\), luego no es inyectiva; la imagen sí es todo \\(P_1\\).`},
+{p:`Si \\(T:V\\to W\\) es lineal, \\(\\dim V=\\dim W\\), y \\(\\operatorname{Nu}(T)=\{0\}\\), entonces:`,o:[`\\(T\\) es un isomorfismo.`,`\\(T\\) no puede ser sobreyectiva.`,`\\(T\\) tiene rango cero.`,`\\(T\\) no tiene matriz asociada.`],a:0,h:`En dimensiones iguales, inyectividad y sobreyectividad son equivalentes para transformaciones lineales.`,f:`Correcto: núcleo trivial implica inyectividad; con dimensiones iguales, también hay sobreyectividad.`},
+{p:`Sea \\(T:\\mathbb R^4\\to H\\) sobreyectiva, donde \\(\\dim H=3\\). ¿Cuál es la nulidad de \\(T\\)?`,o:[`\\(1\\)`,`\\(3\\)`,`\\(4\\)`,`\\(0\\)`],a:0,h:`Si es sobreyectiva, el rango es \\(\\dim H=3\\). Aplique rango-nulidad.`,f:`Correcto: \\(4=3+\\operatorname{nul}(T)\\), luego la nulidad es \\(1\\).`},
+{p:`Una transformación lineal \\(T:M_{2\\times2}\\to P_3\\) puede ser isomorfismo porque:`,o:[`Ambos espacios tienen dimensión \\(4\\).`,`Todo espacio de matrices es igual a todo espacio de polinomios.`,`\\(P_3\\) tiene dimensión \\(3\\).`,`No puede existir ninguna transformación entre esos espacios.`],a:0,h:`Compare dimensiones: \\(M_{2\\times2}\\) tiene cuatro entradas libres y \\(P_3\\) tiene base \\(\{1,x,x^2,x^3\}\\).`,f:`Correcto: ambos tienen dimensión \\(4\\), por lo que puede existir un isomorfismo, aunque no toda transformación lo sea.`},
+{p:`Si la matriz asociada de \\(T:V\\to W\\) tiene pivote en cada columna, entonces:`,o:[`\\(T\\) es inyectiva.`,`\\(T\\) necesariamente es sobreyectiva.`,`\\(\\operatorname{Im}(T)=\{0\}\\).`,`\\(T\\) no es lineal.`],a:0,h:`Pivote en cada columna significa que no hay variables libres en \\(A_Tx=0\\).`,f:`Correcto: no hay variables libres en el núcleo, así que el núcleo es trivial y \\(T\\) es inyectiva.`},
+{p:`Si la matriz asociada de \\(T:V\\to W\\) tiene pivote en cada fila, entonces:`,o:[`\\(T\\) es sobreyectiva.`,`\\(T\\) necesariamente es inyectiva.`,`\\(T\\) tiene núcleo igual a \\(V\\).`,`No se puede hablar de imagen.`],a:0,h:`Pivote en cada fila significa que la imagen alcanza todas las direcciones del codominio.`,f:`Correcto: las columnas generan todo el codominio, por tanto la transformación es sobreyectiva.`}
+]
+};
+
+const EXTRA_QUESTIONS = {
+lineal:[
+{kind:'tf',p:`Verdadero o falso: si \\(T:V\\to W\\) es lineal, entonces necesariamente \\(T(0_V)=0_W\\).`,answer:true,h:`Evalúe la definición con \\(0_V=0\\cdot v\\).`,f:`Verdadero: \\(T(0_V)=T(0\\cdot v)=0T(v)=0_W\\).`},
+{kind:'integer',p:`Sea \\(T:\\mathbb R^3\\to\\mathbb R^3\\), \\(T(x,y,z)=(x-y,2x+z,y+z)\\). ¿Cuántos términos constantes aparecen en las componentes de \\(T\\)?`,answer:0,h:`Busque números sumados que no multipliquen variables.`,f:`El número correcto es \\(0\\). Todas las componentes son combinaciones lineales homogéneas.`},
+{kind:'statements',p:`Para una transformación \\(T:V\\to W\\), considere:<br>I. Si \\(T\\) es lineal, \\(T(u+v)=T(u)+T(v)\\).<br>II. Si \\(T\\) es lineal, \\(T(\\lambda u)=\\lambda T(u)\\).<br>III. Si \\(T(0)=0\\), entonces \\(T\\) siempre es lineal.`,o:[`Solo I`,`Solo II`,`Solo III`,`I y II`,`I y III`,`I, II y III`],a:3,h:`La condición \\(T(0)=0\\) es necesaria, pero no suficiente.`,f:`Las afirmaciones I y II son verdaderas. La III es falsa porque \\(T(0)=0\\) no garantiza aditividad ni homogeneidad.`},
+{kind:'mc',p:`Sea \\(T(x,y)=(3x-2y,5x+y)\\). ¿Cuál es \\(T(2,-1)\\)?`,o:[`\\( (8,9) \\)`,`\\( (4,11) \\)`,`\\( (6,10) \\)`,`\\( (1,7) \\)`,`\\( (8,-9) \\)`,`\\( (5,9) \\)`],a:0,h:`Sustituya \\(x=2\\), \\(y=-1\\).`,f:`\\(3(2)-2(-1)=8\\) y \\(5(2)+(-1)=9\\), por tanto \\(T(2,-1)=(8,9)\\).`}
+],
+nucleo:[
+{kind:'tf',p:`Verdadero o falso: una transformación lineal es inyectiva si y solo si su núcleo contiene únicamente el vector cero.`,answer:true,h:`Use el criterio de núcleo trivial.`,f:`Verdadero: \\(\\ker T=\\{0\\}\\) equivale a que no haya dos vectores distintos con la misma imagen.`},
+{kind:'integer',p:`Sea \\(A=\\begin{pmatrix}1&2&3\\\\0&1&4\\end{pmatrix}\\). Si la matriz tiene rango \\(2\\), ¿cuál es la nulidad de la transformación \\(x\\mapsto Ax\\) de \\(\\mathbb R^3\\) a \\(\\mathbb R^2\\)?`,answer:1,h:`Aplique rango-nulidad: \\(\\dim V=\\operatorname{rango}+\\operatorname{nulidad}\\).`,f:`La nulidad es \\(3-2=1\\).`},
+{kind:'statements',p:`Para \\(T:\\mathbb R^3\\to\\mathbb R^2\\), considere:<br>I. \\(\\ker T\\) es subespacio de \\(\\mathbb R^3\\).<br>II. Si \\(\\ker T=\\mathbb R^3\\), entonces \\(T\\) es la transformación cero.<br>III. Si \\(\\ker T\\) tiene dimensión \\(1\\), entonces \\(T\\) no es inyectiva.`,o:[`Solo I`,`Solo II`,`Solo III`,`I y II`,`I y III`,`I, II y III`],a:5,h:`Recuerde que todo núcleo de una transformación lineal es subespacio.`,f:`Las tres son verdaderas: el núcleo es subespacio; si todo vector va al cero, la transformación es cero; y una nulidad positiva impide inyectividad.`},
+{kind:'mc',p:`Sea \\(T(x,y,z)=(x+2y-z,\\,2x+4y-2z)\\). ¿Cuál vector pertenece al núcleo?`,o:[`\\( (1,0,1) \\)`,`\\( (1,1,0) \\)`,`\\( (0,1,0) \\)`,`\\( (2,0,1) \\)`,`\\( (0,0,1) \\)`,`\\( (1,-1,1) \\)`],a:0,h:`Debe cumplirse \\(x+2y-z=0\\); la segunda ecuación es el doble de la primera.`,f:`Para \\((1,0,1)\\), se tiene \\(1+0-1=0\\) y también \\(2+0-2=0\\).`}
+],
+imagen:[
+{kind:'tf',p:`Verdadero o falso: la imagen de una transformación matricial \\(x\\mapsto Ax\\) es el subespacio generado por las columnas de \\(A\\).`,answer:true,h:`Escriba \\(Ax\\) como combinación lineal de las columnas de \\(A\\).`,f:`Verdadero: \\(Ax=x_1c_1+\\cdots+x_nc_n\\), donde \\(c_i\\) son las columnas de \\(A\\).`},
+{kind:'integer',p:`Si una matriz \\(4\\times 5\\) tiene rango \\(3\\), ¿cuál es la dimensión de la imagen de la transformación asociada?`,answer:3,h:`La dimensión de la imagen es el rango.`,f:`La dimensión de la imagen es \\(3\\).`},
+{kind:'statements',p:`Sobre la imagen de \\(T:V\\to W\\), considere:<br>I. \\(\\operatorname{Im}(T)\\subseteq W\\).<br>II. \\(T\\) es sobreyectiva si \\(\\operatorname{Im}(T)=W\\).<br>III. El rango de \\(T\\) es \\(\\dim(\\operatorname{Im}T)\\).`,o:[`Solo I`,`Solo II`,`Solo III`,`I y II`,`I y III`,`I, II y III`],a:5,h:`Las tres frases son definiciones o consecuencias directas.`,f:`I, II y III son verdaderas: imagen dentro del codominio, sobreyectividad como imagen igual al codominio, y rango como dimensión de la imagen.`},
+{kind:'mc',p:`Las columnas de una matriz asociada son \\(c_1=(1,0,2)\\), \\(c_2=(0,1,1)\\), \\(c_3=(1,1,3)\\). ¿Cuál afirmación es correcta?`,o:[`\\(c_3=c_1+c_2\\), entonces el rango es \\(2\\).`,`Las tres columnas son independientes y el rango es \\(3\\).`,`El rango es \\(0\\).`,`La imagen no está definida.`,`La matriz es necesariamente cuadrada.`,`El núcleo es necesariamente trivial.`],a:0,h:`Compare \\(c_1+c_2\\) con \\(c_3\\).`,f:`Como \\((1,0,2)+(0,1,1)=(1,1,3)\\), la tercera columna depende de las dos primeras; si las dos primeras son independientes, el rango es \\(2\\).`}
+],
+matriz:[
+{kind:'tf',p:`Verdadero o falso: en la matriz asociada de \\(T\\) respecto a una base del dominio, la columna \\(i\\) corresponde a las coordenadas de \\(T(v_i)\\).`,answer:true,h:`Las columnas representan imágenes de los vectores base.`,f:`Verdadero: la columna \\(i\\) es \\([T(v_i)]_{B'}\\).`},
+{kind:'integer',p:`Sea \\(T:\\mathbb R^2\\to\\mathbb R^3\\). ¿Cuántas columnas tiene la matriz asociada respecto a bases canónicas?`,answer:2,h:`El número de columnas es la dimensión del dominio.`,f:`Tiene \\(2\\) columnas porque el dominio es \\(\\mathbb R^2\\).`},
+{kind:'statements',p:`Al construir una matriz asociada, considere:<br>I. Primero se evalúa \\(T\\) en los vectores de la base del dominio.<br>II. Las imágenes se expresan en la base del codominio.<br>III. Las coordenadas obtenidas se colocan como filas.`,o:[`Solo I`,`Solo II`,`Solo III`,`I y II`,`I y III`,`I, II y III`],a:3,h:`La última palabra clave es: columnas, no filas.`,f:`I y II son verdaderas; III es falsa porque las coordenadas de cada imagen se colocan como columnas.`},
+{kind:'mc',p:`Si \\(T(e_1)=(2,-1)\\) y \\(T(e_2)=(0,3)\\), ¿cuál es la matriz canónica de \\(T:\\mathbb R^2\\to\\mathbb R^2\\)?`,o:[`\\( \\begin{pmatrix}2&0\\\\-1&3\\end{pmatrix} \\)`,`\\( \\begin{pmatrix}2&-1\\\\0&3\\end{pmatrix} \\)`,`\\( \\begin{pmatrix}0&2\\\\3&-1\\end{pmatrix} \\)`,`\\( \\begin{pmatrix}-1&3\\\\2&0\\end{pmatrix} \\)`,`\\( \\begin{pmatrix}2&3\\\\-1&0\\end{pmatrix} \\)`,`\\( \\begin{pmatrix}1&0\\\\0&1\\end{pmatrix} \\)`],a:0,h:`Use las imágenes como columnas.`,f:`La primera columna es \\((2,-1)\\) y la segunda es \\((0,3)\\).`}
+],
+espacios:[
+{kind:'tf',p:`Verdadero o falso: el conjunto de matrices simétricas \\(2\\times2\\) es un espacio vectorial de dimensión \\(3\\).`,answer:true,h:`Una matriz simétrica \\(2\\times2\\) tiene forma \\(\\begin{pmatrix}a&b\\\\b&c\\end{pmatrix}\\).`,f:`Verdadero: tiene tres parámetros libres \\(a,b,c\\).`},
+{kind:'integer',p:`¿Cuál es la dimensión de \\(P_4\\), el espacio de polinomios reales de grado menor o igual que \\(4\\)?`,answer:5,h:`Una base usual es \\(\\{1,x,x^2,x^3,x^4\\}\\).`,f:`La dimensión es \\(5\\).`},
+{kind:'statements',p:`En \\(P_2\\) con base \\(\\{1,x,x^2\\}\\), considere:<br>I. \\(2-x+3x^2\\) tiene coordenadas \\((2,-1,3)\\).<br>II. \\(\\dim P_2=3\\).<br>III. \\(x^3\\in P_2\\).`,o:[`Solo I`,`Solo II`,`Solo III`,`I y II`,`I y III`,`I, II y III`],a:3,h:`\\(P_2\\) contiene polinomios hasta grado \\(2\\).`,f:`I y II son verdaderas. III es falsa porque \\(x^3\\) tiene grado \\(3\\).`},
+{kind:'mc',p:`Sea \\(H=\\{\\begin{pmatrix}a&0\\\\0&b\\end{pmatrix}:a,b\\in\\mathbb R\\}\\). ¿Cuál puede ser una base de \\(H\\)?`,o:[`\\( \\left\\{\\begin{pmatrix}1&0\\\\0&0\\end{pmatrix},\\begin{pmatrix}0&0\\\\0&1\\end{pmatrix}\\right\\} \\)`,`\\( \\left\\{\\begin{pmatrix}1&1\\\\1&1\\end{pmatrix}\\right\\} \\)`,`\\( \\left\\{\\begin{pmatrix}0&1\\\\1&0\\end{pmatrix}\\right\\} \\)`,`\\( \\left\\{\\begin{pmatrix}1&0\\\\0&0\\end{pmatrix}\\right\\} \\)`,`\\( \\left\\{\\begin{pmatrix}0&0\\\\0&0\\end{pmatrix}\\right\\} \\)`,`\\(\\mathbb R^4\\)`],a:0,h:`Las matrices diagonales \\(2\\times2\\) tienen dos parámetros libres.`,f:`Toda matriz diagonal \\(\\begin{pmatrix}a&0\\\\0&b\\end{pmatrix}\\) se escribe como \\(aE_{11}+bE_{22}\\).`}
+],
+integrador:[
+{kind:'tf',p:`Verdadero o falso: si \\(\\dim V=\\dim W\\), entonces toda transformación lineal \\(T:V\\to W\\) es automáticamente un isomorfismo.`,answer:false,h:`Tener dimensiones iguales no garantiza núcleo trivial.`,f:`Falso: por ejemplo, la transformación cero entre espacios de igual dimensión no es isomorfismo.`},
+{kind:'integer',p:`Sea \\(T:\\mathbb R^5\\to\\mathbb R^3\\) con rango \\(3\\). ¿Cuál es la nulidad de \\(T\\)?`,answer:2,h:`Use \\(5=\\operatorname{rango}+\\operatorname{nulidad}\\).`,f:`La nulidad es \\(5-3=2\\).`},
+{kind:'statements',p:`Suponga \\(T:V\\to W\\) lineal, \\(\\dim V=4\\), \\(\\dim W=4\\). Considere:<br>I. Si \\(T\\) es inyectiva, entonces es sobreyectiva.<br>II. Si \\(T\\) es sobreyectiva, entonces es inyectiva.<br>III. Si \\(\\ker T\\neq\\{0\\}\\), entonces \\(T\\) no es isomorfismo.`,o:[`Solo I`,`Solo II`,`Solo III`,`I y II`,`I y III`,`I, II y III`],a:5,h:`En espacios de la misma dimensión finita, inyectividad y sobreyectividad son equivalentes.`,f:`Las tres afirmaciones son verdaderas.`},
+{kind:'mc',p:`Sea \\(T:\\mathbb R^3\\to\\mathbb R^3\\) con matriz asociada de rango \\(2\\). ¿Cuál afirmación integra correctamente rango y núcleo?`,o:[`\\(T\\) no es inyectiva ni sobreyectiva.`,`\\(T\\) es isomorfismo.`,`\\(T\\) es inyectiva pero no sobreyectiva.`,`\\(T\\) es sobreyectiva pero no inyectiva.`,`\\(\\ker T=\\{0\\}\\).`,`La imagen tiene dimensión \\(3\\).`],a:0,h:`En \\(\\mathbb R^3\\), rango \\(2\\) implica nulidad \\(1\\).`,f:`Como el rango es \\(2<3\\), no es sobreyectiva; como la nulidad es \\(1\\), no es inyectiva.`}
+]
+};
+Object.keys(EXTRA_QUESTIONS).forEach(k=>QUESTIONS[k].push(...EXTRA_QUESTIONS[k]));
+
+
+function currentMilitaryPassword(){
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2,'0');
+  const mm = String(now.getMinutes()).padStart(2,'0');
+  return hh + mm;
+}
+function validTeacherPassword(v){
+  const raw = (v||'').replace(/\D/g,'');
+  return raw === currentMilitaryPassword();
+}
+function typeset(){ if(window.MathJax?.typesetPromise) MathJax.typesetPromise().catch(()=>{}); }
+
+function updateClock(){
+  const d = new Date();
+  const hh = String(d.getHours()).padStart(2,'0');
+  const mm = String(d.getMinutes()).padStart(2,'0');
+  const ss = String(d.getSeconds()).padStart(2,'0');
+  const el = $('#currentClock span');
+  if(el) el.textContent = `${hh}:${mm}:${ss}`;
+}
+setInterval(updateClock,1000); updateClock();
+function enableFullscreenOnFirstInteraction(){
+  const once = () => requestFull();
+  ['pointerdown','keydown','touchstart'].forEach(ev=>document.addEventListener(ev, once, {once:true, passive:true}));
+}
+enableFullscreenOnFirstInteraction();
+function shuffleArray(arr){
+  const a = [...arr];
+  for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+function stripLatexHTML(s){
+  return String(s ?? '').replace(/<br\s*\/?>/gi,'\n').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+}
+function normalizeIntegerValue(v){
+  const raw = String(v ?? '').replace(',', '.').trim();
+  if(raw === '') return NaN;
+  return Number(raw);
+}
+function getQuestionKind(q){ return q.kind || q.type || 'mc'; }
+function ensureSixOptions(q){
+  const opts = [...(q.o || [])];
+  const filler = [
+    `No se puede determinar con la información dada.`,
+    `Ninguna de las anteriores.`,
+    `Todas las anteriores.`,
+    `La transformación no está definida.`,
+    `El resultado depende de la base elegida.`,
+    `El procedimiento no aplica en este caso.`
+  ];
+  let k=0;
+  while(opts.length < 6){
+    const candidate = filler[k++ % filler.length];
+    if(!opts.includes(candidate)) opts.push(candidate);
+  }
+  return opts.slice(0,6);
+}
+function prepareQuestionRender(q){
+  const kind = getQuestionKind(q);
+  if(kind === 'integer'){
+    return {kind, options:[], correctIndex:null, answer:q.answer};
+  }
+  let opts;
+  if(kind === 'tf'){
+    opts = [
+      {text:'Verdadero', sourceIndex:0, correct:q.answer === true},
+      {text:'Falso', sourceIndex:1, correct:q.answer === false}
+    ];
+  } else {
+    const full = ensureSixOptions(q);
+    opts = full.map((text,idx)=>({text, sourceIndex:idx, correct:idx === q.a}));
+  }
+  const shuffled = shuffleArray(opts);
+  return {kind, options:shuffled, correctIndex:shuffled.findIndex(x=>x.correct), answer:q.answer};
+}
+function questionKindLabel(kind){
+  const labels = {mc:'Opción múltiple · 6 opciones', tf:'Verdadero / Falso', integer:'Respuesta numérica entera', statements:'Afirmaciones I, II y III'};
+  return labels[kind] || 'Opción múltiple';
+}
+function fitBoardToViewport(){
+  const wrap = $('#sceneWrap'), board = $('#boardArea');
+  if(!wrap || !board) return;
+  const r = wrap.getBoundingClientRect();
+  const scale = Math.min(1, Math.max(.54, Math.min((r.width-18)/940, (r.height-18)/940)));
+  const cls = board.className || 'view-front';
+  if(cls.includes('view-front')) board.style.transform = `rotateX(0deg) rotateZ(0deg) scale(${(scale*.98).toFixed(3)})`;
+  else if(cls.includes('view-3d')) board.style.transform = `rotateX(56deg) rotateZ(-18deg) scale(${scale.toFixed(3)})`;
+  else board.style.transform = '';
+}
+
+function toast(msg){ const t=document.createElement('div'); t.className='toast'; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2600); }
+function log(msg){ $('#logBox').innerHTML = msg; }
+
+function initSetup(){
+  const box = $('#playersSetup'); box.innerHTML='';
+  const n = Number($('#playerCount').value);
+  for(let i=0;i<n;i++){
+    const row=document.createElement('div'); row.className='playerRow';
+    row.innerHTML=`<div class="field"><label>Jugador ${i+1}</label><input id="pname${i}" value="Jugador ${i+1}"></div><div class="field"><label>Color</label><select id="pcolor${i}">${playerColors.map(c=>`<option value="${c}" style="color:${c}">${c}</option>`).join('')}</select></div>`;
+    box.appendChild(row); $('#pcolor'+i).value=playerColors[i%playerColors.length];
+  }
+}
+$('#playerCount').addEventListener('change',initSetup); initSetup();
+$('#unlockBtn').onclick = ()=>{ requestFull(); securityArmed=true; document.body.classList.add('security-armed'); if(validTeacherPassword($('#teacherPassword').value)){ $('#lockScreen').classList.add('hidden'); $('#setupScreen').classList.remove('hidden'); fitBoardToViewport(); requestFull(); } else { $('#lockError').textContent='Clave incorrecta. Verifique la clave docente.'; } };
+$('#teacherPassword').addEventListener('keydown',e=>{ requestFull(); if(e.key==='Enter') $('#unlockBtn').click(); });
+['pointerdown','touchstart','keydown'].forEach(ev=>document.addEventListener(ev,()=>{ if(!document.fullscreenElement && securityIsOn()) requestFull(); }, {passive:true}));
+$('#backLockBtn').onclick=()=>{ $('#setupScreen').classList.add('hidden'); $('#lockScreen').classList.remove('hidden'); requestFull(); };
+
+function buildBoard(){
+  positions={}; adjacency={}; $('#boardElements').innerHTML=''; $('#tokenLayer').innerHTML=''; $('#connectors').innerHTML='';
+  const cx=470, cy=470, outerR=356;
+  for(let i=0;i<24;i++){
+    const angle = 90 - i*15;
+    const rad = angle*Math.PI/180;
+    const cat = outerPattern[i];
+    const id = 'o'+i;
+    positions[id] = {id,type:'outer',index:i,cat,x:cx+outerR*Math.cos(rad),y:cy-outerR*Math.sin(rad),label:String(i+1),angle};
+  }
+  CATS.forEach((c,k)=>{
+    const angle = 90 - k*60;
+    const rad = angle*Math.PI/180;
+    [258,178,100].forEach((r,step)=>{
+      const id = `i-${c.key}-${step}`;
+      positions[id] = {id,type:'inner',lane:c.key,step,cat:c.key,x:cx+r*Math.cos(rad),y:cy-r*Math.sin(rad),label:`${c.short}${step+1}`,angle};
+    });
+    const conn=document.createElement('div'); conn.className='connector'; conn.style.width='258px'; conn.style.transform=`rotate(${-angle}deg) translateZ(12px)`; $('#connectors').appendChild(conn);
+  });
+  positions.center = {id:'center',type:'center',cat:'integrador',x:cx,y:cy,label:'FINAL'};
+  for(let i=0;i<24;i++){ adjacency['o'+i] = ['o'+((i+1)%24),'o'+((i+23)%24)]; }
+  CATS.forEach(c=>{
+    const gate = 'o'+gateways[c.key];
+    const i0 = `i-${c.key}-0`, i1=`i-${c.key}-1`, i2=`i-${c.key}-2`;
+    adjacency[gate].push(i0); adjacency[i0]=[gate,i1]; adjacency[i1]=[i0,i2]; adjacency[i2]=[i1,'center'];
+  });
+  adjacency.center = CATS.map(c=>`i-${c.key}-2`);
+  Object.values(positions).filter(p=>p.type!=='center').forEach(p=>{
+    const c=catMap[p.cat]; const el=document.createElement('div');
+    el.className=`tile ${c.cls} ${p.type==='outer' && Object.values(gateways).includes(p.index)?'cheese':''}`;
+    el.id='tile-'+p.id; el.dataset.id=p.id; el.style.left=p.x+'px'; el.style.top=p.y+'px';
+    el.innerHTML=`<span class="num">${p.label}</span><span class="icon">${p.type==='outer' && Object.values(gateways).includes(p.index)?'◖':c.icon}</span><span class="caption">${c.short}</span>`;
+    el.onclick=()=>selectTarget(p.id); $('#boardElements').appendChild(el);
+  });
+}
+function createTokens(){
+  $('#tokenLayer').innerHTML='';
+  players.forEach((p,i)=>{ const div=document.createElement('div'); div.className='token'; div.id='token'+i; div.innerHTML=`<div class="badge" style="background:${p.color}">${i+1}</div>`; $('#tokenLayer').appendChild(div); moveTokenInstant(i,p.pos); });
+}
+function moveTokenInstant(i,posId){ const pos=positions[posId]; const offset = tokenOffset(i, players.length); const t=$('#token'+i); if(t){t.style.left=(pos.x+offset.x)+'px'; t.style.top=(pos.y+offset.y)+'px';} }
+function tokenOffset(i,n){ const a = (2*Math.PI*i/Math.max(n,1)); const r = n===1?0:16; return {x:r*Math.cos(a), y:r*Math.sin(a)}; }
+function refreshPlayers(){
+  $('#playersList').innerHTML = players.map((p,i)=>`<div class="playerCard ${i===currentPlayer?'active':''}"><div class="playerHeader"><div><b>${p.name}</b><div class="note">Nota: <b>${p.score}/50</b> · Preguntas: ${p.answered} · Correctas: ${p.correct}${i===currentPlayer?' · Racha: '+turnStreak+'/3':''}</div></div><div class="tokenMini" style="background:${p.color}">${i+1}</div></div><div class="cheeseTrack">${CATS.map(c=>`<span title="${c.name}" class="cheeseDot ${p.cheeses[c.key]?'on':''}" style="background:${p.cheeses[c.key]?c.color:'rgba(255,255,255,.04)'}">${c.short[0]}</span>`).join('')}</div></div>`).join('');
+  $('#turnPill').textContent = `Turno: ${players[currentPlayer]?.name||''} · Racha ${turnStreak}/3`;
+  $('#securityPill').textContent = `Salidas: ${totalViolations}`;
+  $$('.tile').forEach(el=>el.classList.remove('current'));
+  $('#centerHub').classList.remove('current');
+  if(players[currentPlayer]){
+    if(players[currentPlayer].pos==='center') $('#centerHub').classList.add('current');
+    else $('#tile-'+players[currentPlayer].pos)?.classList.add('current');
+  }
+}
+function startGame(){
+  const n=Number($('#playerCount').value); players=[];
+  for(let i=0;i<n;i++) players.push({name:$('#pname'+i).value||`Jugador ${i+1}`,color:$('#pcolor'+i).value,score:0,answered:0,correct:0,violations:0,pos:'center',cheeses:{},topicStats:{}});
+  currentPlayer=0; totalViolations=0; turnStreak=0; startTime=new Date(); gameActive=true; securityArmed=true; document.body.classList.add('security-armed'); historyLog=[]; exitEventsLog=[]; examCancelled=false;
+  buildBoard(); createTokens(); refreshPlayers();
+  $('#setupScreen').classList.add('hidden'); $('#app').classList.remove('hidden'); setTimeout(fitBoardToViewport,60);
+  totalSeconds=Number($('#gameMinutes').value)*60; if(timerId) clearInterval(timerId); timerId=setInterval(tickTotal,1000); tickTotal();
+  requestFull(); log('Lanza el dado. Se resaltarán todas las casillas posibles según el resultado. Elige una casilla y la ficha se moverá automáticamente.');
+}
+$('#startGameBtn').onclick=startGame;
+function tickTotal(){
+  if(totalSeconds>0){
+    totalSeconds--;
+    const m=Math.floor(totalSeconds/60), s=String(totalSeconds%60).padStart(2,'0');
+    $('#timePill').textContent=`Tiempo: ${m}:${s}`;
+    if(totalSeconds<=0){
+      clearInterval(timerId);
+      finishGame(timeWinnerMessage());
+    }
+  } else $('#timePill').textContent='Sin límite';
+}
+function requestFull(){ const el=document.documentElement; if(el.requestFullscreen && !document.fullscreenElement) el.requestFullscreen().catch(()=>{}); }
+$('#fullBtn').onclick=requestFull;
+$$('[data-view]').forEach(b=>b.onclick=()=>{ const v=b.dataset.view; $('#boardArea').className = v==='front'?'view-front':v==='3d'?'view-3d':'view-orbit'; fitBoardToViewport(); });
+
+function rollDice(){
+  if(currentTargets.length) clearTargets();
+  const d = 1+Math.floor(Math.random()*6); const dice=$('#dice'); dice.classList.remove('rolling'); void dice.offsetWidth; dice.classList.add('rolling');
+  const rotations = {1:'rotateX(-18deg) rotateY(24deg)',2:'rotateX(-90deg) rotateY(0deg)',3:'rotateY(-90deg)',4:'rotateY(90deg)',5:'rotateX(90deg)',6:'rotateY(180deg)'};
+  setTimeout(()=>{dice.style.transform=rotations[d]||rotations[1];},50);
+  currentTargets = reachable(players[currentPlayer].pos,d);
+  setTimeout(()=>highlightTargets(d),650);
+}
+$('#rollBtn').onclick=rollDice;
+function reachable(start,steps){
+  let paths = [{id:start,path:[start]}];
+  for(let k=0;k<steps;k++){
+    let next=[];
+    paths.forEach(p=>{ (adjacency[p.id]||[]).forEach(nb=>{ if(p.path.length>1 && nb===p.path[p.path.length-2]) return; next.push({id:nb,path:[...p.path,nb]}); }); });
+    paths=next;
+  }
+  const seen={}; paths.forEach(p=>{ if(!seen[p.id]) seen[p.id]=p; });
+  return Object.values(seen).filter(p=>p.id!==start);
+}
+function highlightTargets(d){
+  currentTargets.forEach(t=>$('#tile-'+t.id)?.classList.add('possible'));
+  if(currentTargets.some(t=>t.id==='center')) $('#centerHub').classList.add('possible');
+  const labels=currentTargets.map(t=>positions[t.id].label).join(', ');
+  $('#diceInfo').textContent = `Resultado: ${d}. Casillas posibles: ${labels}.`;
+  log(`<b>Resultado del dado: ${d}.</b><br>Elige una casilla resaltada. La pregunta aparecerá apenas la ficha llegue.`);
+}
+function clearTargets(){ $$('.tile').forEach(el=>el.classList.remove('possible')); $('#centerHub').classList.remove('possible'); currentTargets=[]; }
+$('#centerHub').onclick=()=>selectTarget('center');
+function selectTarget(id){
+  const target=currentTargets.find(t=>t.id===id); if(!target) return;
+  clearTargets(); animateMove(currentPlayer,target.path,()=>{ players[currentPlayer].pos=id; refreshPlayers(); openQuestion(id); });
+}
+function animateMove(i,path,done){
+  const token=$('#token'+i); token.classList.add('moving'); let k=1;
+  const step=()=>{ if(k>=path.length){ token.classList.remove('moving'); done&&done(); return; } const pos=positions[path[k]], off=tokenOffset(i,players.length); token.style.left=(pos.x+off.x)+'px'; token.style.top=(pos.y+off.y)+'px'; k++; setTimeout(step,270); };
+  step();
+}
+function openQuestion(posId){
+  const pos=positions[posId]; let cat = pos.type==='center'?'integrador':pos.cat;
+  const p=players[currentPlayer];
+  if(pos.type==='center' && !CATS.every(c=>p.cheeses[c.key])){ toast('Para responder en el centro debes reunir todos los quesitos.'); cat='integrador'; }
+  const q = drawQuestion(cat);
+  const render = prepareQuestionRender(q);
+  currentQuestion={q,cat,posId,answered:false,render};
+  $('#qCategory').innerHTML=`<span style="color:${catMap[cat].color}">●</span> ${catMap[cat].name} · ${questionKindLabel(render.kind)}`;
+  $('#qTitle').textContent = `Pregunta automática · Casilla ${pos.label}`;
+  $('#qPlayer').textContent=p.name;
+  $('#qPrompt').innerHTML=q.p;
+  $('#hintBox').innerHTML=q.h;
+  $('#hintBox').classList.add('hidden');
+  $('#feedbackBox').classList.add('hidden');
+  $('#continueBtn').classList.add('hidden');
+  $('#showHintBtn').disabled=false;
+  $('#pauseQuestionBtn').disabled=false;
+  $('#pauseQuestionBtn').textContent='Detener tiempo para pensar';
+  questionPaused=false;
+
+  if(render.kind === 'integer'){
+    $('#optionsBox').innerHTML = `
+      <div class="integerAnswerBox">
+        <input id="integerAnswerInput" type="number" step="1" inputmode="numeric" placeholder="Escriba un número entero" />
+        <button class="primary" id="submitIntegerAnswer">Responder</button>
+      </div>
+      <div class="typeNote">Esta pregunta se califica con el número entero exacto. Puede detener el tiempo para pensar antes de responder.</div>`;
+    $('#submitIntegerAnswer').onclick=()=>answerQuestion(normalizeIntegerValue($('#integerAnswerInput').value));
+    $('#integerAnswerInput').addEventListener('keydown',e=>{ if(e.key==='Enter') $('#submitIntegerAnswer').click(); });
+    setTimeout(()=>$('#integerAnswerInput')?.focus(),50);
+  } else {
+    $('#optionsBox').innerHTML = render.options.map((op,i)=>`<button class="optionBtn" data-i="${i}"><span class="letter">${String.fromCharCode(65+i)}</span><span class="latexContent">${op.text}</span></button>`).join('');
+    $$('.optionBtn').forEach(b=>b.onclick=()=>answerQuestion(Number(b.dataset.i)));
+  }
+  $('#questionModal').classList.remove('hidden');
+  startQuestionTimer();
+  typeset();
+}
+function drawQuestion(cat){ const arr=QUESTIONS[cat]; const unused=arr.filter(q=>!q.used); if(!unused.length) arr.forEach(q=>q.used=false); const pool=arr.filter(q=>!q.used); const q=pool[Math.floor(Math.random()*pool.length)]; q.used=true; return q; }
+$('#showHintBtn').onclick=()=>{ $('#hintBox').classList.remove('hidden'); typeset(); };
+function startQuestionTimer(){
+  questionDuration=75; questionSeconds=questionDuration; questionPaused=false;
+  if(qTimerId) clearInterval(qTimerId);
+  $('#questionTimer').style.width='100%';
+  qTimerId=setInterval(()=>{
+    if(questionPaused) return;
+    questionSeconds--;
+    $('#questionTimer').style.width=(questionSeconds/questionDuration*100)+'%';
+    if(questionSeconds<=0){ clearInterval(qTimerId); answerQuestion('__TIMEOUT__'); }
+  },1000);
+}
+function toggleQuestionPause(){
+  if(!currentQuestion || currentQuestion.answered) return;
+  questionPaused = !questionPaused;
+  $('#pauseQuestionBtn').textContent = questionPaused ? 'Reanudar tiempo' : 'Detener tiempo para pensar';
+  toast(questionPaused ? 'Tiempo de pregunta detenido.' : 'Tiempo de pregunta reanudado.');
+}
+$('#pauseQuestionBtn').onclick=toggleQuestionPause;
+function clampScore(v){ return Math.max(0, Math.min(50, v)); }
+function isCheeseSpace(posId,cat){ const pos=positions[posId]; return !!(pos && pos.type==='outer' && gateways[cat]===pos.index); }
+function timeWinnerMessage(){
+  if(!players.length) return 'Tiempo terminado. Partida finalizada.';
+  const max=Math.max(...players.map(p=>p.score));
+  const winners=players.filter(p=>p.score===max).map(p=>p.name).join(', ');
+  return `Tiempo terminado. Gana ${winners} con ${max}/50 puntos.`;
+}
+function answerQuestion(i){
+  if(!currentQuestion || currentQuestion.answered) return;
+  currentQuestion.answered=true;
+  clearInterval(qTimerId);
+  questionPaused=false;
+  $('#pauseQuestionBtn').disabled=true;
+
+  const {q,cat,posId,render}=currentQuestion;
+  const p=players[currentPlayer];
+  const kind = render.kind;
+  let ok = false;
+  let chosenLetter = 'Sin respuesta';
+  let chosenText = 'No se respondió dentro del tiempo disponible.';
+  let correctLetter = '';
+  let correctText = '';
+
+  if(kind === 'integer'){
+    const numeric = Number(i);
+    ok = Number.isFinite(numeric) && numeric === Number(render.answer);
+    chosenText = Number.isFinite(numeric) ? String(numeric) : 'Sin respuesta';
+    correctText = String(render.answer);
+    correctLetter = 'Valor correcto';
+  } else {
+    ok = Number(i) === render.correctIndex;
+    chosenLetter = Number(i) >= 0 ? String.fromCharCode(65 + Number(i)) : 'Sin respuesta';
+    chosenText = Number(i) >= 0 ? (render.options[Number(i)]?.text || '') : 'No se respondió dentro del tiempo disponible.';
+    correctLetter = String.fromCharCode(65 + render.correctIndex);
+    correctText = render.options[render.correctIndex]?.text || '';
+  }
+
+  const finalReady = posId==='center' && CATS.every(c=>p.cheeses[c.key]);
+  const cheese = isCheeseSpace(posId,cat);
+
+  p.answered++;
+  p.topicStats[cat]=p.topicStats[cat]||{ok:0,total:0};
+  p.topicStats[cat].total++;
+
+  let delta = 0;
+  let endMessage = '';
+
+  if(ok){
+    turnStreak++;
+    p.correct++;
+    p.topicStats[cat].ok++;
+    if(finalReady){
+      p.score = 50;
+      delta = 50;
+      endMessage = `${p.name} ganó al responder correctamente la pregunta final y obtuvo 50/50.`;
+    } else if(cheese){
+      delta = 5;
+      p.score = clampScore(p.score + delta);
+      p.cheeses[cat]=true;
+    } else {
+      delta = 2;
+      p.score = clampScore(p.score + delta);
+    }
+  } else {
+    delta = -1;
+    p.score = clampScore(p.score - 1);
+  }
+
+  historyLog.push({
+    player:p.name,
+    cat:catMap[cat].name,
+    type:questionKindLabel(kind),
+    ok,
+    delta,
+    score:p.score,
+    question:stripLatexHTML(q.p),
+    answer:chosenText,
+    correct:correctText,
+    remainingSeconds:Math.max(0,questionSeconds)
+  });
+
+  if(kind === 'integer'){
+    $('#submitIntegerAnswer')?.setAttribute('disabled','disabled');
+    $('#integerAnswerInput')?.setAttribute('disabled','disabled');
+  } else {
+    $$('.optionBtn').forEach(b=>{
+      b.disabled=true;
+      const bi=Number(b.dataset.i);
+      if(bi===render.correctIndex) b.classList.add('correct');
+      if(bi===Number(i) && !ok) b.classList.add('incorrect');
+    });
+  }
+
+  const forceNextTurn = ok && !finalReady && turnStreak >= 3;
+  let ruleMsg = '';
+  if(ok && finalReady) ruleMsg = `<p><b>Pregunta final:</b> ${p.name} queda con <b>50/50</b> y la partida finaliza.</p>`;
+  else if(ok && forceNextTurn) ruleMsg = `<p><b>Límite de turno alcanzado:</b> esta es la tercera respuesta correcta del turno. Suma el puntaje correspondiente, pero ahora el turno pasa obligatoriamente al siguiente jugador.</p>`;
+  else if(ok && cheese) ruleMsg = `<p><b>Quesito ganado:</b> suma <b>+5</b> puntos y conserva el turno. Lleva ${turnStreak}/3 aciertos permitidos en este turno.</p>`;
+  else if(ok) ruleMsg = `<p><b>Buena respuesta:</b> suma <b>+2</b> puntos y conserva el turno. Lleva ${turnStreak}/3 aciertos permitidos en este turno.</p>`;
+  else ruleMsg = `<p><b>Mala respuesta:</b> pierde <b>1</b> punto y el turno pasa al siguiente jugador.</p>`;
+
+  $('#feedbackBox').className='feedback latexContent '+(ok?'good':'bad');
+
+  const reasonText = q.f || 'La respuesta correcta se obtiene aplicando directamente la definición, el criterio o el procedimiento algebraico correspondiente al tema evaluado.';
+  const correctLine = kind === 'integer' ? `<p><b>Respuesta correcta:</b> ${correctText}</p>` : `<p><b>Respuesta correcta:</b> ${correctLetter}. ${correctText}</p>`;
+  const chosenLine = ok ? '' : `<p><b>Tu respuesta:</b> ${kind === 'integer' ? chosenText : chosenLetter + (Number(i) >= 0 ? '. ' + chosenText : '')}</p>`;
+
+  const detailedFeedback = `
+    <div class="answerReview">
+      <p class="answerState"><b>${ok ? 'Correcto.' : 'Respuesta incorrecta.'}</b></p>
+      ${chosenLine}
+      ${correctLine}
+      <p><b>Razón matemática:</b> ${reasonText}</p>
+      <p><b>Idea clave para recordar:</b> identifica si te piden linealidad, núcleo, imagen, matriz asociada, coordenadas en una base o isomorfismo. Después aplica la definición correspondiente y verifica las condiciones paso a paso.</p>
+      <p><b>Tiempo restante al responder:</b> ${Math.max(0,questionSeconds)} segundos.</p>
+    </div>
+  `;
+
+  $('#feedbackBox').innerHTML = detailedFeedback + ruleMsg;
+
+  currentQuestion.ok = ok;
+  currentQuestion.forceNextTurn = forceNextTurn;
+  currentQuestion.endsGame = !!(ok && (finalReady || p.score>=50));
+  if(ok && !finalReady && p.score>=50){
+    p.score = 50;
+    endMessage = `${p.name} llegó a 50/50 puntos. La partida finaliza.`;
+  }
+  currentQuestion.endMessage = endMessage;
+
+  $('#continueBtn').textContent = currentQuestion.endsGame ? 'Ver informe final' : (ok ? (forceNextTurn ? 'Pasar turno obligatorio' : 'Seguir lanzando dado') : 'Pasar turno');
+  $('#continueBtn').classList.remove('hidden');
+  $('#showHintBtn').disabled=true;
+  refreshPlayers();
+  typeset();
+}
+$('#continueBtn').onclick=()=>{
+  if(!currentQuestion) return;
+  const ok = !!currentQuestion.ok;
+  const endsGame = !!currentQuestion.endsGame;
+  const endMessage = currentQuestion.endMessage;
+  $('#questionModal').classList.add('hidden');
+  if(endsGame){ finishGame(endMessage); return; }
+  if(ok && !currentQuestion.forceNextTurn) keepTurn(); else nextTurn();
+};
+function keepTurn(){
+  currentTargets=[];
+  refreshPlayers();
+  $('#diceInfo').textContent=`Respondiste bien: conservas el turno. Lanza el dado nuevamente. Aciertos seguidos del turno: ${turnStreak}/3.`;
+  log(`<b>${players[currentPlayer].name}</b> respondió correctamente y conserva el turno. Racha actual: <b>${turnStreak}/3</b>.`);
+}
+function nextTurn(){
+  turnStreak=0;
+  currentPlayer=(currentPlayer+1)%players.length;
+  currentTargets=[];
+  refreshPlayers();
+  $('#diceInfo').textContent='Al lanzar, se iluminarán las casillas posibles. El jugador elige una.';
+  log(`Turno de <b>${players[currentPlayer].name}</b>. Lanza el dado.`);
+}
+
+function isAuthorizedExitWindow(){ return Date.now() < authorizedExitUntil; }
+function securityIsOn(){ return securityArmed || gameActive; }
+function registerViolation(reason='Salida no autorizada'){
+  if(isAuthorizedExitWindow()) return;
+  if(!securityIsOn() || $('#securityOverlay').classList.contains('hidden')===false) return;
+  totalViolations++;
+  if(players[currentPlayer]) players[currentPlayer].violations++;
+  exitEventsLog.push({
+    time:new Date().toLocaleString(),
+    player:players[currentPlayer]?.name || 'Pantalla de acceso/configuración',
+    reason,
+    total:totalViolations,
+    playerAttempts:players[currentPlayer]?.violations || 0
+  });
+  if(players.length) refreshPlayers();
+
+  const playerAttempts = players[currentPlayer]?.violations || 0;
+  if(gameActive && (totalViolations>=3 || playerAttempts>=3)){
+    examCancelled = true;
+    toast('Quiz Anulado por 3 intentos de salida.');
+    finishGame('QUIZ ANULADO: se registraron 3 intentos de salida, minimización, cambio de pestaña o pantallazo.', {anulled:true, reason});
+    return;
+  }
+
+  $('#securityMessage').innerHTML = `<b>Intento registrado (${totalViolations}/3).</b><br><span class="securityCounter">Bloqueo activo · intento ${totalViolations} de 3</span><br>Motivo: ${reason}. La aplicación debe permanecer en pantalla completa. Solo se puede continuar con la clave docente.`;
+  $('#securityOverlay').classList.remove('hidden');
+  $('#securityError').textContent='';
+  requestFull();
+}
+document.addEventListener('visibilitychange',()=>{ if(document.hidden) registerViolation('Cambio de pestaña o minimización no autorizada'); else if(securityIsOn()) requestFull(); });
+window.addEventListener('blur',()=>{ setTimeout(()=>{ if(securityIsOn() && !document.hasFocus()) registerViolation('Pérdida de foco, posible minimización o captura no autorizada'); },250); });
+document.addEventListener('fullscreenchange',()=>{ if(securityIsOn() && !document.fullscreenElement) registerViolation('Salida de pantalla completa no autorizada'); });
+document.addEventListener('contextmenu',e=>{ if(securityIsOn()) e.preventDefault(); });
+document.addEventListener('keydown',e=>{
+  if(!securityIsOn()) return;
+  const k=(e.key||'').toLowerCase();
+  const screenshotLike = e.key==='PrintScreen'
+    || ((e.ctrlKey||e.metaKey) && ['p','s','u'].includes(k))
+    || (e.ctrlKey && e.shiftKey && ['i','j','c','s'].includes(k))
+    || (e.metaKey && e.shiftKey && ['3','4','5','s'].includes(k));
+  if(screenshotLike){
+    e.preventDefault();
+    registerViolation(e.key==='PrintScreen' ? 'Intento de pantallazo con PrintScreen' : 'Intento de captura, impresión, guardado o acceso a herramientas externas');
+  }
+});
+document.addEventListener('keyup',e=>{
+  if(!securityIsOn()) return;
+  if(e.key==='PrintScreen'){
+    if(navigator.clipboard?.writeText) navigator.clipboard.writeText('Captura bloqueada por la evaluación.').catch(()=>{});
+    registerViolation('Intento de pantallazo con PrintScreen');
+  }
+});
+$('#unlockSecurityBtn').onclick = ()=>{
+  requestFull();
+  if(validTeacherPassword($('#securityPassword').value)){
+    $('#securityOverlay').classList.add('hidden');
+    $('#securityPassword').value='';
+    $('#securityError').textContent='';
+    requestFull();
+    toast('Bloqueo retirado. La partida continúa en pantalla completa.');
+  } else {
+    $('#securityError').textContent='Clave incorrecta. Use la hora militar actual del dispositivo en formato HHMM.';
+  }
+};
+$('#securityPassword').addEventListener('keydown',e=>{ if(e.key==='Enter') $('#unlockSecurityBtn').click(); });
+
+function escapeHTML(s){
+  return String(s ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+function pct(ok,total){ return total ? Math.round(100*ok/total) : 0; }
+function topicAdvice(key){
+  const advice = {
+    lineal:'Repasar la definición de transformación lineal, el criterio \\(T(0)=0\\), y la verificación \\(T(\\alpha u+\\beta v)=\\alpha T(u)+\\beta T(v)\\).',
+    nucleo:'Practicar sistemas homogéneos, solución paramétrica del núcleo, nulidad e inyectividad.',
+    imagen:'Reforzar generación por columnas, rango, pivotes y el criterio de sobreyectividad.',
+    matriz:'Estudiar cómo construir matrices asociadas desde bases: imágenes de vectores base como columnas.',
+    espacios:'Repasar coordenadas en espacios de polinomios, matrices, sucesiones y soluciones con base dada.',
+    integrador:'Resolver ejercicios que combinen núcleo, imagen, rango, nulidad, matriz asociada e isomorfismos.'
+  };
+  return advice[key] || 'Repasar definiciones y hacer ejercicios adicionales.';
+}
+function scoreChartSVG(){
+  const w=760, rowH=42, left=145, right=30, h=Math.max(120, players.length*rowH+55), barW=w-left-right;
+  let svg=`<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Gráfica de notas sobre 50">`;
+  svg+=`<text x="0" y="24" fill="#ffe9a8" font-size="18" font-weight="700">Notas por jugador sobre 50 puntos</text>`;
+  players.forEach((p,i)=>{
+    const y=48+i*rowH; const bw=Math.max(2, (p.score/50)*barW);
+    svg+=`<text x="0" y="${y+18}" fill="#ffffff" font-size="13">${escapeHTML(p.name)}</text>`;
+    svg+=`<rect x="${left}" y="${y}" width="${barW}" height="20" rx="10" fill="rgba(255,255,255,.13)"></rect>`;
+    svg+=`<rect x="${left}" y="${y}" width="${bw}" height="20" rx="10" fill="${p.color}"></rect>`;
+    svg+=`<text x="${left+barW+8}" y="${y+16}" fill="#ffffff" font-size="13" font-weight="700">${p.score}/50</text>`;
+  });
+  svg+=`</svg>`;
+  return svg;
+}
+function correctWrongChartSVG(){
+  const w=760, rowH=48, left=145, right=40, h=Math.max(140, players.length*rowH+70), barW=w-left-right;
+  const max=Math.max(1,...players.map(p=>Math.max(1,p.answered)));
+  let svg=`<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Gráfica de preguntas correctas e incorrectas">`;
+  svg+=`<text x="0" y="24" fill="#ffe9a8" font-size="18" font-weight="700">Preguntas correctas e incorrectas</text>`;
+  svg+=`<rect x="${left}" y="36" width="14" height="14" fill="#24d98f"></rect><text x="${left+20}" y="48" fill="#fff" font-size="12">Correctas</text>`;
+  svg+=`<rect x="${left+105}" y="36" width="14" height="14" fill="#ff5e78"></rect><text x="${left+125}" y="48" fill="#fff" font-size="12">Incorrectas</text>`;
+  players.forEach((p,i)=>{
+    const y=64+i*rowH; const wrong=Math.max(0,p.answered-p.correct);
+    const okW=(p.correct/max)*barW; const badW=(wrong/max)*barW;
+    svg+=`<text x="0" y="${y+17}" fill="#ffffff" font-size="13">${escapeHTML(p.name)}</text>`;
+    svg+=`<rect x="${left}" y="${y}" width="${barW}" height="16" rx="8" fill="rgba(255,255,255,.12)"></rect>`;
+    svg+=`<rect x="${left}" y="${y}" width="${Math.max(0,okW)}" height="16" rx="8" fill="#24d98f"></rect>`;
+    svg+=`<rect x="${left+okW}" y="${y}" width="${Math.max(0,badW)}" height="16" rx="8" fill="#ff5e78"></rect>`;
+    svg+=`<text x="${left+barW+8}" y="${y+13}" fill="#fff" font-size="13">${p.correct}/${wrong}</text>`;
+  });
+  svg+=`</svg>`;
+  return svg;
+}
+function buildPlayerReport(p){
+  const wrong=Math.max(0,p.answered-p.correct);
+  const percentage=pct(p.correct,p.answered);
+  const weak = CATS.filter(c=>{
+    const st=p.topicStats[c.key]||{ok:0,total:0};
+    return st.total===0 || pct(st.ok,st.total)<60;
+  });
+  const planItems = weak.length ? weak.map(c=>`<li><b>${c.name}:</b> ${topicAdvice(c.key)}</li>`).join('') : '<li>Buen desempeño general. Mantener práctica con ejercicios integradores y justificación de procedimientos.</li>';
+  let html=`<div class="reportCard"><h4>${escapeHTML(p.name)}</h4>
+    <p><b>Nota:</b> ${p.score}/50 · <b>Correctas:</b> ${p.correct} · <b>Incorrectas:</b> ${wrong} · <b>Porcentaje de acierto:</b> ${percentage}%</p>
+    <div class="scoreBarWrap"><div class="scoreBarFill" style="width:${Math.max(0,Math.min(100,p.score*2))}%"></div></div>
+    <p><b>Minimizaciones / salidas / pantallazos:</b> ${p.violations}</p>
+  </div>`;
+  html+=`<table class="reportTable"><thead><tr><th>Tema</th><th>Correctas</th><th>Total</th><th>%</th><th>Gráfica</th></tr></thead><tbody>`;
+  CATS.forEach(c=>{
+    const st=p.topicStats[c.key]||{ok:0,total:0}; const per=pct(st.ok,st.total);
+    html+=`<tr><td>${c.name}</td><td>${st.ok}</td><td>${st.total}</td><td>${per}%</td><td><div class="topicMiniBar"><div class="topicMiniFill" style="width:${per}%"></div></div></td></tr>`;
+  });
+  html+=`</tbody></table><h4>Plan de mejora de ${escapeHTML(p.name)}</h4><ul>${planItems}</ul>`;
+  return html;
+}
+
+function sanitizePDFText(s){
+  return stripLatexHTML(s).replace(/\\/g,'').replace(/[{}]/g,'').replace(/\s+/g,' ').trim();
+}
+function addWrappedText(doc, text, x, y, maxWidth, lineHeight){
+  const lines = doc.splitTextToSize(String(text||''), maxWidth);
+  lines.forEach(line=>{ if(y>282){ doc.addPage(); y=18; } doc.text(line, x, y); y += lineHeight; });
+  return y;
+}
+function autoDownloadReportPDF(headline, annulled=false){
+  try{
+    const jsPDF = window.jspdf?.jsPDF;
+    if(!jsPDF) throw new Error('jsPDF no cargó');
+    const doc = new jsPDF({orientation:'p', unit:'mm', format:'a4'});
+    const W=210, H=297, margin=14, maxW=W-2*margin;
+    const catColors = {lineal:'#00d4ff', nucleo:'#ff4fd8', imagen:'#24d98f', matriz:'#ffd447', espacios:'#a77dff', integrador:'#ff7b54'};
+    const dark=[6,16,34], navy=[13,35,81], gold=[255,209,102], good=[36,217,143], bad=[255,94,120], muted=[235,240,248];
+    let pageNo=1;
+
+    function hexToRgb(hex){
+      const h=String(hex||'#777777').replace('#','').trim();
+      if(h.length===3) return h.split('').map(ch=>parseInt(ch+ch,16));
+      return [parseInt(h.slice(0,2),16)||120, parseInt(h.slice(2,4),16)||120, parseInt(h.slice(4,6),16)||120];
+    }
+    function setFill(hex){ const [r,g,b]=hexToRgb(hex); doc.setFillColor(r,g,b); }
+    function setText(hex){ const [r,g,b]=hexToRgb(hex); doc.setTextColor(r,g,b); }
+    function ensure(space=20){ if(y+space>H-16){ footer(); doc.addPage(); pageNo++; y=18; headerSmall(); } }
+    function footer(){
+      doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(110,120,135);
+      doc.text(`Informe generado automáticamente · Página ${pageNo}`, margin, H-8);
+    }
+    function headerSmall(){
+      doc.setFillColor(...dark); doc.rect(0,0,W,12,'F');
+      doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(255,255,255);
+      doc.text('Trivial Pursuit · Álgebra Lineal', margin, 8);
+      doc.setTextColor(0,0,0);
+    }
+    function wrapped(text, x, yy, width=maxW, lineH=4.5, size=9, color='#111111', bold=false){
+      doc.setFont('helvetica', bold?'bold':'normal'); doc.setFontSize(size); setText(color);
+      const lines = doc.splitTextToSize(String(text||''), width);
+      lines.forEach(line=>{ if(yy>H-18){ footer(); doc.addPage(); pageNo++; yy=18; headerSmall(); } doc.text(line, x, yy); yy += lineH; });
+      doc.setTextColor(0,0,0);
+      return yy;
+    }
+    function section(title){
+      ensure(14);
+      doc.setFillColor(245,248,252); doc.roundedRect(margin, y-4, maxW, 10, 3, 3, 'F');
+      doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(...navy); doc.text(title, margin+3, y+3); y += 13;
+      doc.setTextColor(0,0,0);
+    }
+    function progressBar(x, yy, w, h, value, colorHex, label){
+      const v=Math.max(0,Math.min(1,value));
+      doc.setFillColor(226,232,240); doc.roundedRect(x, yy, w, h, h/2, h/2, 'F');
+      setFill(colorHex); if(v>0) doc.roundedRect(x, yy, Math.max(h, w*v), h, h/2, h/2, 'F');
+      if(label){ doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(20,30,45); doc.text(label, x+w+4, yy+h-1); }
+    }
+    function metricCard(x, yy, w, title, value, colorHex){
+      setFill(colorHex); doc.roundedRect(x, yy, w, 22, 4, 4, 'F');
+      doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(255,255,255); doc.text(title, x+4, yy+7);
+      doc.setFontSize(15); doc.text(String(value), x+4, yy+17);
+      doc.setTextColor(0,0,0);
+    }
+    function stackedBar(x, yy, w, h, ok, wrong){
+      const total=Math.max(1,ok+wrong), okW=w*ok/total, badW=w*wrong/total;
+      doc.setFillColor(226,232,240); doc.roundedRect(x, yy, w, h, h/2, h/2, 'F');
+      doc.setFillColor(...good); if(okW>0) doc.roundedRect(x, yy, Math.max(h, okW), h, h/2, h/2, 'F');
+      doc.setFillColor(...bad); if(badW>0) doc.roundedRect(x+okW, yy, Math.max(0,badW), h, h/2, h/2, 'F');
+    }
+    function drawLegend(x, yy){
+      doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(50,60,75);
+      doc.setFillColor(...good); doc.rect(x, yy-3, 4, 4, 'F'); doc.text('Aciertos', x+6, yy);
+      doc.setFillColor(...bad); doc.rect(x+36, yy-3, 4, 4, 'F'); doc.text('Incorrectas', x+42, yy);
+      doc.setTextColor(0,0,0);
+    }
+
+    const totalAnswered = players.reduce((a,p)=>a+p.answered,0);
+    const totalCorrect = players.reduce((a,p)=>a+p.correct,0);
+    const totalWrong = Math.max(0,totalAnswered-totalCorrect);
+    const globalPct = pct(totalCorrect,totalAnswered);
+    const maxScore = players.length ? Math.max(...players.map(p=>p.score)) : 0;
+    const winners = players.filter(p=>p.score===maxScore).map(p=>p.name).join(', ') || '—';
+    const stamp = new Date().toLocaleString();
+    let y=18;
+
+    doc.setFillColor(...dark); doc.rect(0,0,W,54,'F');
+    doc.setFillColor(...navy); doc.rect(0,43,W,11,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(19); doc.setTextColor(255,255,255);
+    doc.text('Informe final de Álgebra Lineal', margin, 20);
+    doc.setFontSize(10); doc.setFont('helvetica','normal');
+    doc.text('Trivial Pursuit Deluxe · reporte automático con gráficas y plan de mejora', margin, 29);
+    doc.setFont('helvetica','bold'); doc.setFontSize(11);
+    doc.setTextColor(annulled?255:255, annulled?190:232, annulled?190:120);
+    doc.text(annulled ? 'ESTADO: QUIZ ANULADO' : 'ESTADO: FINALIZADO', margin, 40);
+    doc.setTextColor(255,255,255); doc.setFontSize(9);
+    doc.text(`Fecha y hora: ${stamp}`, margin, 50);
+    y=66;
+
+    metricCard(margin, y, 42, 'Nota ganadora', `${maxScore}/50`, '#00d4ff');
+    metricCard(margin+47, y, 42, 'Aciertos', totalCorrect, '#24d98f');
+    metricCard(margin+94, y, 42, 'Incorrectas', totalWrong, '#ff5e78');
+    metricCard(margin+141, y, 41, 'Acierto global', `${globalPct}%`, '#a77dff');
+    y += 31;
+
+    doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(...navy);
+    doc.text('Resumen ejecutivo', margin, y); y+=7;
+    y = wrapped(annulled
+      ? `El quiz fue anulado por acumulación de ${totalViolations} intento(s) de salida, minimización, pérdida de foco, salida de pantalla completa o intento de captura/impresión. El informe conserva el registro de seguridad y las respuestas alcanzadas antes de la anulación.`
+      : `La partida finalizó correctamente. Ganador(es): ${winners}. El puntaje se reporta sobre 50 puntos y el análisis identifica aciertos, errores, porcentajes por tema y plan de mejora individual.`, margin, y, maxW, 4.8, 9.5, '#182033');
+    y+=4;
+
+    section('Gráfica de notas por jugador');
+    players.forEach(p=>{
+      ensure(11);
+      doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(35,45,60); doc.text(p.name, margin, y+3.5);
+      progressBar(margin+45, y-2, 102, 6, p.score/50, p.color || '#00d4ff', `${p.score}/50`);
+      y+=10;
+    });
+    y+=2;
+
+    section('Gráfica de aciertos e incorrectas');
+    drawLegend(margin+45, y); y+=6;
+    players.forEach(p=>{
+      ensure(11);
+      const wrong=Math.max(0,p.answered-p.correct);
+      doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(35,45,60); doc.text(p.name, margin, y+3.5);
+      stackedBar(margin+45, y-2, 102, 6, p.correct, wrong);
+      doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.text(`${p.correct} correctas · ${wrong} incorrectas`, margin+151, y+3.5);
+      y+=10;
+    });
+
+    players.forEach(p=>{
+      footer(); doc.addPage(); pageNo++; y=18; headerSmall();
+      doc.setFont('helvetica','bold'); doc.setFontSize(16); doc.setTextColor(...navy); doc.text(`Informe individual · ${p.name}`, margin, y); y+=10;
+      const wrong=Math.max(0,p.answered-p.correct), per=pct(p.correct,p.answered);
+      metricCard(margin, y, 38, 'Nota', `${p.score}/50`, p.color || '#00d4ff');
+      metricCard(margin+42, y, 38, 'Aciertos', p.correct, '#24d98f');
+      metricCard(margin+84, y, 38, 'Incorrectas', wrong, '#ff5e78');
+      metricCard(margin+126, y, 56, 'Porcentaje', `${per}%`, '#a77dff');
+      y+=31;
+      section('Desempeño por tema');
+      CATS.forEach(c=>{
+        const st=p.topicStats[c.key]||{ok:0,total:0};
+        const themePct=pct(st.ok,st.total);
+        ensure(12);
+        doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(35,45,60); doc.text(`${c.short} · ${c.name}`, margin, y+3.5);
+        progressBar(margin+70, y-2, 76, 6, themePct/100, catColors[c.key], `${st.ok}/${st.total} · ${themePct}%`);
+        y+=10;
+      });
+
+      section('Diagnóstico educativo');
+      const weak=CATS.map(c=>{
+        const st=p.topicStats[c.key]||{ok:0,total:0};
+        return {cat:c, ok:st.ok, total:st.total, per:pct(st.ok,st.total)};
+      }).sort((a,b)=>(a.total===0? -1: a.per)-(b.total===0? -1: b.per));
+      const weakList=weak.filter(x=>x.total===0 || x.per<70).slice(0,4);
+      if(weakList.length){
+        y = wrapped('Prioridad de estudio según el desempeño observado:', margin, y, maxW, 4.6, 9, '#182033', true);
+        weakList.forEach((x,idx)=>{
+          ensure(18);
+          doc.setFillColor(250,252,255); doc.roundedRect(margin, y-3, maxW, 16, 3, 3, 'F');
+          setFill(catColors[x.cat.key]); doc.rect(margin, y-3, 3, 16, 'F');
+          y = wrapped(`${idx+1}. ${x.cat.name}: ${x.total===0 ? 'no hubo evidencia suficiente de respuesta' : `desempeño ${x.ok}/${x.total} (${x.per}%)`}. ${sanitizePDFText(topicAdvice(x.cat.key))}`, margin+6, y+2, maxW-8, 4.2, 8.4, '#182033');
+          y+=2;
+        });
+      } else {
+        y = wrapped('El desempeño general fue suficiente. Se recomienda mantener práctica con ejercicios integradores que exijan justificar núcleo, imagen, matriz asociada, rango-nulidad e interpretación conceptual.', margin, y, maxW, 4.8, 9, '#182033');
+      }
+      y+=4;
+      section('Plan de mejora sugerido');
+      const planBase = weakList.length ? weakList : weak.slice(0,3);
+      planBase.forEach((x,idx)=>{
+        ensure(20);
+        y = wrapped(`${idx+1}. Repasar ${x.cat.name}. Acción: resolver al menos 5 ejercicios cortos de definición, 3 ejercicios de cálculo y 2 preguntas conceptuales tipo verdadero/falso o afirmaciones I-II-III.`, margin, y, maxW, 4.5, 8.8, '#182033');
+        y = wrapped(`Consejo específico: ${sanitizePDFText(topicAdvice(x.cat.key))}`, margin+4, y, maxW-4, 4.3, 8.2, '#3b475c');
+        y+=2;
+      });
+    });
+
+    if(exitEventsLog.length){
+      footer(); doc.addPage(); pageNo++; y=18; headerSmall();
+      doc.setFont('helvetica','bold'); doc.setFontSize(15); doc.setTextColor(...navy); doc.text('Registro de seguridad', margin, y); y+=9;
+      y = wrapped('Cada evento listado corresponde a una salida, minimización, pérdida de foco, salida de pantalla completa o intento de captura/impresión detectado por el navegador.', margin, y, maxW, 4.5, 9, '#182033');
+      y+=3;
+      exitEventsLog.forEach((ev,i)=>{
+        ensure(13);
+        doc.setFillColor(255,245,247); doc.roundedRect(margin, y-3, maxW, 10, 2, 2, 'F');
+        doc.setTextColor(160,30,55); doc.setFont('helvetica','bold'); doc.setFontSize(8.5);
+        doc.text(`${i+1}. ${ev.time} · ${ev.player}`, margin+3, y+1);
+        doc.setTextColor(40,40,40); doc.setFont('helvetica','normal'); doc.text(String(ev.reason||''), margin+85, y+1);
+        y+=12;
+      });
+    }
+
+    if(historyLog.length){
+      footer(); doc.addPage(); pageNo++; y=18; headerSmall();
+      doc.setFont('helvetica','bold'); doc.setFontSize(15); doc.setTextColor(...navy); doc.text('Detalle de respuestas', margin, y); y+=9;
+      historyLog.forEach((h,i)=>{
+        ensure(24);
+        doc.setFillColor(h.ok?235:255, h.ok?255:238, h.ok?246:242);
+        doc.roundedRect(margin, y-4, maxW, 20, 3, 3, 'F');
+        doc.setFont('helvetica','bold'); doc.setFontSize(8.4); doc.setTextColor(h.ok?20:170, h.ok?120:35, h.ok?80:55);
+        doc.text(`${i+1}. ${h.player} · ${h.cat} · ${h.type} · ${h.ok?'Correcta':'Incorrecta'} · Puntaje ${h.score}/50`, margin+3, y);
+        y+=5;
+        y=wrapped(`Pregunta: ${sanitizePDFText(h.question)}`, margin+3, y, maxW-6, 3.8, 7.6, '#182033');
+        y=wrapped(`Respuesta dada: ${sanitizePDFText(h.answer)} | Correcta: ${sanitizePDFText(h.correct)}`, margin+3, y, maxW-6, 3.8, 7.6, '#3b475c');
+        y+=2;
+      });
+    }
+    footer();
+    const fileStamp = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+    doc.save(`Informe_Algebra_Lineal_${annulled?'ANULADO_':''}${fileStamp}.pdf`);
+  }catch(err){
+    console.warn('No fue posible generar PDF automático:', err);
+    const blob = new Blob([`<!doctype html><html><head><meta charset="utf-8"><title>Informe</title></head><body>${$('#reportContent').innerHTML}</body></html>`], {type:'text/html'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `Informe_Algebra_Lineal_${Date.now()}.html`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  }
+}
+
+function finishGame(message, opts={}){
+  gameActive=false;
+  securityArmed=true;
+  document.body.classList.add('security-armed');
+  if(timerId) clearInterval(timerId);
+  if(qTimerId) clearInterval(qTimerId);
+  clearTargets();
+  $('#questionModal').classList.add('hidden');
+  $('#securityOverlay').classList.add('hidden');
+
+  const annulled = !!(opts.anulled || examCancelled);
+  const duration = startTime ? Math.round((new Date()-startTime)/60000) : 0;
+  const maxScore = players.length ? Math.max(...players.map(p=>p.score)) : 0;
+  const winners = players.filter(p=>p.score===maxScore).map(p=>p.name).join(', ');
+  const headline = annulled ? 'QUIZ ANULADO' : (message || `Partida finalizada. Gana ${winners||'—'} con ${maxScore}/50 puntos.`);
+  let html = '';
+
+  if(annulled){
+    html += `<div class="annulledBanner"><h2>QUIZ ANULADO</h2><p>El examen se anuló porque se registraron <b>${totalViolations}</b> intentos de salida, minimización, cambio de pestaña, pérdida de foco o pantallazo. ${escapeHTML(message||'')}</p></div>`;
+  } else {
+    html += `<p><b>${headline}</b></p>`;
+  }
+
+  html += `<div class="finishNotice"><h3>Informe descargado automáticamente</h3><p>El archivo PDF profesional se descarga directamente en el equipo, sin abrir una vista previa automática.</p><p>Desde esta pantalla puede regresar a la clave docente, iniciar otra partida o cerrar la pestaña.</p></div><p>La puntuación corresponde a la <b>nota sobre 50 puntos</b>. Duración aproximada: ${duration} minutos. Minimizaciones, salidas o intentos de pantallazo registrados: <b>${totalViolations}</b>.</p>`;
+
+  html += `<div class="reportGrid">`;
+  players.forEach(p=>{
+    const wrong=Math.max(0,p.answered-p.correct);
+    html += `<div class="reportCard"><h4>${escapeHTML(p.name)}</h4><p><b>Nota final:</b> ${p.score}/50</p><p>Correctas: ${p.correct} · Incorrectas: ${wrong} · Contestadas: ${p.answered}</p><p>Salidas/intentos: ${p.violations}</p></div>`;
+  });
+  html += `</div>`;
+
+  html += `<div class="chartBox">${scoreChartSVG()}</div>`;
+  html += `<div class="chartBox">${correctWrongChartSVG()}</div>`;
+
+  html += `<h3>Resumen por jugador</h3><table class="reportTable"><thead><tr><th>Jugador</th><th>Nota / 50</th><th>Correctas</th><th>Incorrectas</th><th>Total</th><th>% acierto</th><th>Salidas</th><th>Quesitos</th></tr></thead><tbody>`;
+  players.forEach(p=>{
+    const wrong=Math.max(0,p.answered-p.correct), per=pct(p.correct,p.answered);
+    html += `<tr><td>${escapeHTML(p.name)}</td><td><b>${p.score}/50</b></td><td>${p.correct}</td><td>${wrong}</td><td>${p.answered}</td><td>${per}%</td><td>${p.violations}</td><td>${CATS.filter(c=>p.cheeses[c.key]).map(c=>c.short).join(', ')||'—'}</td></tr>`;
+  });
+  html += `</tbody></table>`;
+
+  html += `<h3>Reglas aplicadas</h3><ul><li>Respuesta correcta normal: <b>+2</b> puntos y conserva el turno hasta un máximo de <b>3 preguntas correctas consecutivas</b> por turno.</li><li>Respuesta incorrecta: <b>−1</b> punto y pasa el turno.</li><li>Pregunta de quesito correcta: <b>+5</b> puntos, gana el quesito y cuenta dentro del máximo de <b>3 aciertos</b> del turno.</li><li>Pregunta final correcta o llegar a 50 puntos: <b>50/50</b> y termina la partida.</li><li>Si termina el tiempo, gana quien tenga mayor puntaje.</li><li>Con <b>3 intentos</b> de salida/minimización/pantallazo, el quiz queda <b>anulado</b>.</li></ul>`;
+
+  if(exitEventsLog.length){
+    html += `<h3>Registro de salidas, minimizaciones o intentos de pantallazo</h3><table class="reportTable"><thead><tr><th>#</th><th>Hora</th><th>Jugador en turno</th><th>Motivo</th></tr></thead><tbody>`;
+    exitEventsLog.forEach((ev,i)=>{ html += `<tr><td>${i+1}</td><td>${escapeHTML(ev.time)}</td><td>${escapeHTML(ev.player)}</td><td>${escapeHTML(ev.reason)}</td></tr>`; });
+    html += `</tbody></table>`;
+  } else {
+    html += `<h3>Registro de salidas, minimizaciones o intentos de pantallazo</h3><p>No se registraron intentos.</p>`;
+  }
+
+  html += `<h3>Porcentajes, temas por reforzar y plan de mejora</h3>`;
+  players.forEach(p=>{ html += buildPlayerReport(p); });
+
+  $('#reportContent').innerHTML=html;
+  $('#reportModal').classList.remove('hidden');
+  typeset();
+  authorizeTemporaryExit(12);
+  setTimeout(()=>{ authorizeTemporaryExit(8); autoDownloadReportPDF(headline, annulled); }, 900);
+}
+function returnToMenu(){
+  gameActive=false;
+  securityArmed=true;
+  document.body.classList.add('security-armed');
+  if(timerId) clearInterval(timerId);
+  if(qTimerId) clearInterval(qTimerId);
+  $('#questionModal').classList.add('hidden');
+  $('#securityOverlay').classList.add('hidden');
+  $('#reportModal').classList.add('hidden');
+  $('#app').classList.add('hidden');
+  $('#setupScreen').classList.add('hidden');
+  $('#lockScreen').classList.remove('hidden');
+  $('#teacherPassword').value='';
+  $('#lockError').textContent='';
+  currentTargets=[];
+  requestFull();
+}
+function newMatch(){
+  $('#reportModal').classList.add('hidden');
+  if(gameActive && !confirm('¿Desea iniciar una nueva partida? Se cerrará la partida actual.')) return;
+  startGame();
+}
+function authorizeTemporaryExit(seconds=15){
+  authorizedExitUntil = Date.now() + seconds*1000;
+}
+function closeBrowserTab(){
+  authorizeTemporaryExit(8);
+  try{
+    window.open('', '_self');
+    window.close();
+  }catch(err){}
+  setTimeout(()=>{
+    if(!document.closed){
+      document.body.innerHTML = `<main class="screen"><div class="panel"><div class="card" style="text-align:center"><h1>Quiz cerrado</h1><p class="sub">El navegador bloqueó el cierre automático de la pestaña. Puede cerrar esta pestaña manualmente.</p></div></div></main>`;
+    }
+  }, 350);
+}
+$('#closeQuizBtn').onclick=()=>{
+  authorizeTemporaryExit(10);
+  if(gameActive){
+    finishGame('Quiz cerrado desde el botón interno Cerrar Quiz.');
+    setTimeout(closeBrowserTab, 2600);
+  } else closeBrowserTab();
+};
+$('#finishBtn').onclick=()=>finishGame();
+$('#mainMenuBtn').onclick=()=>{ if(!gameActive || confirm('¿Regresar a la clave docente? La partida actual se cerrará.')) returnToMenu(); };
+$('#newGameBtn').onclick=newMatch;
+$('#reportMenuBtn').onclick=returnToMenu;
+$('#reportNewGameBtn').onclick=newMatch;
+$('#reportCloseTabBtn').onclick=closeBrowserTab;
+
+window.addEventListener('resize',()=>{ fitBoardToViewport(); players.forEach((p,i)=>moveTokenInstant(i,p.pos)); });
+securityArmed=true; document.body.classList.add('security-armed');
+buildBoard();
+setTimeout(fitBoardToViewport,100);
+</script>
+</body>
+</html>
